@@ -5,7 +5,7 @@
 .about.on-head{cursor:none}
 
 /* текст справа, голова слева смотрит на него; между ними — простор */
-.ab-copy{position:relative;z-index:6;flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,min(42vw,680px));align-content:center;
+.ab-copy{position:relative;z-index:6;flex:1;display:grid;grid-template-columns:minmax(0,calc(46vw - 40px)) minmax(0,680px); /* текст начинается с 46% ширины — по линии взгляда */align-content:center;
   padding-top:clamp(92px,12svh,120px);padding-bottom:clamp(36px,6svh,64px);pointer-events:none}
 .ab-copy > *{grid-column:2;pointer-events:auto}
 .ab-eyebrow{margin:0 0 14px;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:10px}

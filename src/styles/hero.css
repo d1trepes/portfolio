@@ -1,7 +1,7 @@
 /* ---------- hero ---------- */
 .stage{position:relative;overflow-x:clip}
 .hero{position:relative;height:max(740px,100svh);max-height:1100px;overflow:clip}
-.copy{position:relative;z-index:6;height:100%;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto 1fr;column-gap:24px;align-content:start;padding-top:clamp(130px,21svh,230px);padding-bottom:110px}
+.copy{position:relative;z-index:6;height:100%;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto 1fr;column-gap:24px;align-content:start;padding-top:clamp(112px,15svh,170px);padding-bottom:110px}
 h1{display:contents}
 .eyebrow{grid-column:1;grid-row:1;margin:0 0 18px;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:10px}
 .eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ink)}
