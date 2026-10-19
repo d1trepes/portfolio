@@ -70,10 +70,8 @@
 /* отправляется — уголки «дышат», как проценты на загрузке */
 .ct-sendbox.busy .cx{animation:ctBreath 1s var(--smooth) infinite alternate}
 @keyframes ctBreath{to{opacity:.35}}
-.ct-send{--base:var(--lt);--txt:var(--dk);--fill:#2A2A28;--fill-txt:var(--lt);height:clamp(64px,5.4vw,88px);padding:0 1.05em;border-radius:4px;font-size:clamp(22px,2vw,32px)}
-.ct-sl{display:flex;align-items:baseline;gap:.28em;line-height:1}
-.ct-sl b{font:800 1em/1 var(--f-caps);text-transform:uppercase;letter-spacing:-.01em}
-.ct-sl i{font:400 italic 1.08em/1 var(--f-serif);letter-spacing:-.02em}
+.ct-send{--base:var(--lt);--txt:var(--dk);--fill:#2A2A28;--fill-txt:var(--lt);height:clamp(64px,5.2vw,84px);padding:0 1.5em;border-radius:4px;font:800 clamp(17px,1.35vw,22px)/1 var(--f-caps);text-transform:uppercase;letter-spacing:.02em}
+.ct-sl{display:block;line-height:1}
 .ct-sendbox.busy .ct-send{pointer-events:none}
 
 /* согласие на обработку данных: галочку ставит сам человек */

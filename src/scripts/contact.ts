@@ -61,24 +61,26 @@ export function initContact(F) {
     { name: 'Ольга', kind: 0, task: 'стоматологии в Минске', contact: '@olga_dent' },
   ];
   const ORDER = ['name', 'kind', 'task', 'contact'];
-  const D = { on: !reduce, set: 0, step: -1, n: 0, t: 0, phase: 'wait' };
+  // Показ идёт всегда, по кругу. Поле участвует, только пока оно пустое и человек не стоит в нём курсором;
+  // пока человек заполняет форму, ширина пустых полей не меняется, чтобы текст фразы не прыгал.
+  const D = { set: 0, step: 0, n: 0, t: 0, phase: 'wait' };
+  const live = (k) => !inputs[k].value && document.activeElement !== inputs[k];
+  const busyForm = () => form.contains(document.activeElement);
   function setPh(k, text) { const inp = inputs[k]; if (inp.placeholder !== text) inp.placeholder = text; }
   function demoKind(i) { kindsEls.forEach((el, j) => el.classList.toggle('demo', j === i)); }
-  function stopDemo() {
-    if (!D.on) return; D.on = false;
-    fields.forEach((f) => { f.classList.remove('demo'); const k = f.dataset.key; setPh(k, HINT[k]); if (!inputs[k].value) f.dataset.v = HINT[k]; });
-    demoKind(-1);
-  }
+  const kindChosen = () => !!form.querySelector('.ct-kind input:checked');
   function demoTick(now) {
-    if (!D.on || now < D.t) return;
+    if (reduce || now < D.t) return;
     const S = SETS[D.set];
-    if (D.phase === 'wait') { // начало круга: поля пустые, ширина — под примеры этого круга
-      ['name', 'task', 'contact'].forEach((k) => { setPh(k, ''); byKey[k].dataset.v = S[k]; });
+    if (D.phase === 'wait') { // начало круга: пустые поля очищаются, ширина — под примеры этого круга
+      const freeze = busyForm();
+      ['name', 'task', 'contact'].forEach((k) => { if (!live(k)) return; setPh(k, ''); if (!freeze) byKey[k].dataset.v = S[k]; });
       demoKind(-1); D.step = 0; D.n = 0; D.phase = 'type'; D.t = now + 500; return;
     }
     if (D.phase === 'type') {
       const k = ORDER[D.step];
-      if (k === 'kind') { demoKind(S.kind); D.step++; D.t = now + 650; return; }
+      if (k === 'kind') { if (!kindChosen()) demoKind(S.kind); D.step++; D.t = now + 650; return; }
+      if (!live(k)) { byKey[k].classList.remove('demo'); D.n = 0; D.step++; D.t = now; if (D.step >= ORDER.length) { D.phase = 'hold'; D.t = now + 2400; } return; }
       const word = S[k]; byKey[k].classList.add('demo');
       D.n++; setPh(k, word.slice(0, D.n));
       if (D.n >= word.length) {
@@ -87,14 +89,18 @@ export function initContact(F) {
       } else D.t = now + 55 + Math.random() * 45;
       return;
     }
-    if (D.phase === 'hold') { // всё «заполнено» — стираем сразу всё, быстро, и следующий пример
-      ['name', 'task', 'contact'].forEach((k) => setPh(k, ''));
+    if (D.phase === 'hold') { // всё «заполнено» — быстро стираем и показываем следующий пример
+      ['name', 'task', 'contact'].forEach((k) => { if (live(k)) setPh(k, ''); });
       demoKind(-1); D.set = (D.set + 1) % SETS.length; D.phase = 'wait'; D.t = now + 350;
     }
   }
   if (reduce) ['name', 'task', 'contact'].forEach((k) => setPh(k, HINT[k]));
-  form.addEventListener('focusin', stopDemo);
-  form.addEventListener('pointerdown', stopDemo);
+  // встал в пустое поле — в нём спокойная подсказка, что писать
+  ['name', 'task', 'contact'].forEach((k) => inputs[k].addEventListener('focus', () => {
+    byKey[k].classList.remove('demo');
+    if (!inputs[k].value) { setPh(k, HINT[k]); byKey[k].dataset.v = HINT[k]; }
+  }));
+  form.querySelectorAll('.ct-kind input').forEach((r) => r.addEventListener('change', () => demoKind(-1)));
 
   fields.forEach((f) => {
     const inp = $('input', f), k = f.dataset.key;
@@ -127,13 +133,14 @@ export function initContact(F) {
   form.querySelectorAll('.ct-kind input').forEach((r) => r.addEventListener('change', () => { if (!inputs.task.value) inputs.task.focus({ preventScroll: true }); }));
 
   // уголки вокруг кнопки защёлкиваются, когда всё нужное заполнено
-  const isReady = () => inputs.name.value.trim().length >= 2 && !!kindOf(inputs.contact.value) && agree.checked;
+  const nameOk = () => inputs.name.value.trim().length >= 2 && /[a-zа-яё]/i.test(inputs.name.value);
+  const isReady = () => nameOk() && !!kindOf(inputs.contact.value) && agree.checked;
   function ready() { box.classList.toggle('ready', isReady()); }
   agree.addEventListener('change', () => { agreeL.classList.remove('bad'); if (msg.textContent) check(false); ready(); });
 
   function check(focus = true) {
     const bad = [];
-    if (inputs.name.value.trim().length < 2) bad.push('name');
+    if (!nameOk()) bad.push('name');
     if (!kindOf(inputs.contact.value)) bad.push('contact');
     if (!agree.checked) bad.push('agree');
     fields.forEach((f) => f.classList.toggle('bad', bad.includes(f.dataset.key) && focus));
@@ -152,7 +159,6 @@ export function initContact(F) {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    stopDemo();
     if (!check()) return;
     const data = Object.fromEntries(new FormData(form).entries());
     if (data.company) return; // бот
