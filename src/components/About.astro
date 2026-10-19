@@ -1,0 +1,41 @@
+---
+// Блок 3 «Обо мне»: голова (пока зеркальная копия портрета с первого экрана) с линзой, текст слева, строка фактов внизу.
+// Тексты и цифры — временные, заменим при работе над текстами сайта.
+import '../styles/about.css';
+import { TG_LINK } from '../data/ring';
+
+const facts = [
+  { n: 5, suf: '+', t: 'лет в дизайне' },
+  { n: 40, suf: '+', t: 'сайтов запущено' },
+  { n: 24, suf: ' ч', t: 'максимум — ответ на заявку' },
+  { n: 1, suf: '', t: 'человек на весь проект: дизайн, код, запуск' },
+];
+---
+<section class="about" id="about" aria-labelledby="aboutTitle">
+  <div class="ab-copy gutter">
+    <p class="ab-eyebrow ab-rise">Обо мне</p>
+    <h2 id="aboutTitle">
+      <span class="ab-l1"><span class="ab-ln"><span>Привет,</span></span><span class="ab-ln"><span>я&nbsp;Иван</span></span></span>
+      <span class="ab-l2"><span class="ab-ln"><span>и&nbsp;я&nbsp;вникаю</span></span></span>
+    </h2>
+    <div class="ab-text ab-rise">
+      <p>Я&nbsp;веб-дизайнер из&nbsp;Беларуси. Делаю лендинги, многостраничные и&nbsp;B2B-сайты под ключ: от&nbsp;разбора задачи до&nbsp;запуска на&nbsp;сервере.</p>
+      <p>Прежде чем рисовать, разбираюсь в&nbsp;бизнесе клиента: кто покупает, что его останавливает, что должно случиться на&nbsp;сайте. Поэтому сайт не&nbsp;просто красивый&nbsp;— он&nbsp;работает.</p>
+      <div class="ab-cta"><a class="btn" href={TG_LINK} data-tg>Написать в Telegram</a></div>
+    </div>
+  </div>
+
+  <div class="ab-tilt" id="abTilt" aria-hidden="true">
+    <div class="ab-photo" id="abPhoto">
+      <img src="/hero/portrait.webp" alt="" width="1086" height="1018" loading="lazy" decoding="async" />
+      <div class="layer" id="abLayer"><div class="fill"></div><div class="lines"></div></div>
+    </div>
+    <div class="lens ab-lens" id="abLens"><div class="ring" id="abRing"></div><div class="dot"></div></div>
+  </div>
+
+  <div class="ab-facts gutter" id="abFacts">
+    {facts.map((f) => (
+      <div><b data-n={f.n} data-suf={f.suf}>{f.n}{f.suf}</b><span>{f.t}</span></div>
+    ))}
+  </div>
+</section>

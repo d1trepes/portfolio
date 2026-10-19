@@ -4,7 +4,7 @@
 .tint{position:fixed;inset:0;z-index:7;pointer-events:none;opacity:0;will-change:opacity}
 .tint i{position:absolute;inset:0;opacity:0;will-change:opacity}
 
-.featured{position:relative;z-index:9;height:calc(100svh + (var(--n) - 1) * 85svh + 30svh)}
+.featured{position:relative;z-index:9;height:calc(100svh + 40svh + (var(--n) - 1) * 85svh + 30svh)}
 /* цвет интерфейса блока: тёмный или светлый — переключается один раз при смене проекта */
 .fs{--ui:#111111;--ui2:#F3F3F1;color:var(--ui)}
 .fs[data-tone="light"]{--ui:#F3F3F1;--ui2:#111111}

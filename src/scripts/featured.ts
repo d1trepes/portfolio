@@ -37,7 +37,7 @@ export function initFeatured() {
     return { el, i, sl, bg, light: el.dataset.tone === 'light', url: el.getAttribute('href'), tr: '', dim: '', z: '', lift: 0, tx: 0, ty: 0 };
   });
 
-  const S = { W: 600, H: 328, sw: 60, cx: 0, cy: 0, sp: 500, step: 600, docTop: 0, stTop: 0, vw: 1, vh: 1 };
+  const S = { W: 600, H: 328, sw: 60, cx: 0, cy: 0, sp: 500, step: 600, hold: 300, docTop: 0, stTop: 0, vw: 1, vh: 1 };
   const xOff = (d) => { const a = Math.abs(d); return Math.sign(d) * (Math.min(a, 1) * S.sp + Math.max(0, a - 1) * S.sp * 0.82); };
   const scl = (d) => { const a = Math.abs(d); return a <= 1 ? 1 - 0.28 * a : 0.72 - (a - 1) * 0.1; };
 
@@ -51,6 +51,7 @@ export function initFeatured() {
     S.cx = zr.left - fr.left + zr.width / 2; S.cy = zr.top - fr.top + zr.height / 2;
     S.sp = S.W * (mobile ? 0.84 : 0.92);
     S.step = S.vh * 0.85;
+    S.hold = S.vh * 0.4; // «пауза» в начале блока: карточка встаёт на место и стоит, листание начинается не сразу (в featured.css тоже +40svh)
     const sr = sec.getBoundingClientRect();
     S.docTop = sr.top + scrollY;
     S.stTop = sr.top - (stage ? stage.getBoundingClientRect().top : 0);
@@ -76,10 +77,12 @@ export function initFeatured() {
   }
 
   // ---------- навигация ----------
-  const api = { lenis: null, measure, slot, frame, docTop: () => S.docTop };
+  const api = { lenis: null, measure, slot, frame, docTop: () => S.docTop,
+    // для перехода в «Обо мне»: где кончается блок и где стоит последняя карточка
+    exit: () => ({ end: S.docTop + S.hold + (n - 1) * S.step + S.vh * 0.3, x: S.cx, y: S.cy, W: S.W, H: S.H, rad: S.W * 0.05, el: C[n - 1].el }) };
   function go(i) {
     i = clamp(i, 0, n - 1);
-    const y = S.docTop + i * S.step;
+    const y = i === 0 ? S.docTop : S.docTop + S.hold + i * S.step;
     snapping = true; snapT = performance.now();
     if (api.lenis) api.lenis.scrollTo(y, { duration: reduce ? 0 : 1.15, easing: (t) => 1 - Math.pow(1 - t, 4), onComplete: () => { snapping = false; } });
     else { scrollTo({ top: y, behavior: reduce ? 'auto' : 'smooth' }); }
@@ -127,7 +130,7 @@ export function initFeatured() {
   }, { passive: true });
 
   // ---------- кадр ----------
-  let fsm = 0, fPrev = 0, vs = 0, idx = -1, dirty = true, lastY = -1, lastMove = 0, snapping = false, snapT = 0, inPin = false;
+  let fsm = 0, fPrev = 0, vs = 0, idx = -1, dirty = true, lastY = -1, dir = 0, lastMove = 0, snapping = false, snapT = 0, inPin = false;
   let tintOp = '', tintMix = '', pre = null, hdrLight = null;
   function setIdx(i) {
     if (i === idx) return; idx = i;
@@ -143,12 +146,12 @@ export function initFeatured() {
 
   function frame(now, dt) {
     const y = scrollY;
-    const endPin = S.docTop + (n - 1) * S.step + S.vh * 0.3;
+    const endPin = S.docTop + S.hold + (n - 1) * S.step + S.vh * 0.3;
     const near = y > S.docTop - S.vh * 1.3 && y < endPin + S.vh * 1.2;
-    if (y !== lastY) { lastY = y; lastMove = now; }
+    if (y !== lastY) { dir = y > lastY ? 1 : -1; lastY = y; lastMove = now; }
 
     // цвет фона: появляется на подходе к блоку, уходит после него
-    const fT = clamp((y - S.docTop) / S.step, 0, n - 1);
+    const fT = clamp((y - S.docTop - S.hold) / S.step, 0, n - 1);
     inPin = y >= S.docTop - 2 && y <= endPin;
     const enter = clamp((y - (S.docTop - S.vh * 0.62)) / (S.vh * 0.58), 0, 1);
     const exit = clamp(1 - (y - endPin) / (S.vh * 0.5), 0, 1);
@@ -183,8 +186,10 @@ export function initFeatured() {
     // мягкая доводка до ближайшего проекта, когда скролл остановился
     if (!snapping && inPin && !touching && now - lastMove > 170) {
       const target = Math.round(fT);
-      if (Math.abs(fT - target) > 0.004 && fT < n - 1 + 1e-3 && y <= S.docTop + (n - 1) * S.step + 2) go(target);
+      if (Math.abs(fT - target) > 0.004 && fT < n - 1 + 1e-3 && y <= S.docTop + S.hold + (n - 1) * S.step + 2) go(target);
     }
+    // остановились на полпути с первого экрана (листая вниз) — мягко доводим, чтобы карточки сели на место
+    if (!snapping && !touching && dir > 0 && now - lastMove > 220 && y > S.docTop * 0.45 && y < S.docTop - 2) go(0);
     if (snapping && now - snapT > 1600) snapping = false;
 
 

@@ -1,0 +1,65 @@
+/* ---------- блок 3: обо мне ---------- */
+/* фон как у первого экрана (общий фон страницы); блок прозрачный, чтобы цвет проекта плавно таял под ним */
+.about{position:relative;z-index:9;height:max(740px,100svh);max-height:1100px;overflow:clip}
+.about.on-head{cursor:none}
+
+.ab-copy{position:relative;z-index:6;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,min(44vw,700px));align-content:start;padding-top:clamp(120px,19svh,210px);pointer-events:none}
+.ab-copy > *{grid-column:2;pointer-events:auto} /* текст справа — голова слева смотрит на него */
+.ab-eyebrow{margin:0 0 18px;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:10px}
+.ab-eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ink)}
+.about h2{margin:0;display:grid;font-weight:400}
+.ab-l1{display:block;font:800 clamp(48px,5.9vw,106px)/1.04 var(--f-caps);text-transform:uppercase;letter-spacing:-.012em}
+.ab-l2{display:block;justify-self:end;text-align:right;margin-top:-.08em;font:400 italic clamp(48px,5.7vw,102px)/.98 var(--f-serif);letter-spacing:-.03em}
+
+/* строки заголовка въезжают снизу, как в слайдере; запас — чтобы не срезались «й» и хвосты курсива */
+.ab-ln{display:block;overflow:hidden;padding:.24em .12em .2em;margin:-.24em -.12em -.2em}
+.ab-ln > span{display:block;transform:translateY(108%);transition:transform 1.2s var(--smooth)}
+.about.in .ab-ln > span{transform:none}
+.about.in .ab-l1 .ab-ln:nth-child(2) > span{transition-delay:.08s}
+.about.in .ab-l2 .ab-ln > span{transition-delay:.2s}
+.ab-rise{opacity:0;transform:translateY(22px);transition:opacity 1s var(--smooth),transform 1.2s var(--smooth)}
+.about.in .ab-rise{opacity:1;transform:none}
+.about.in .ab-eyebrow{transition-delay:0s}
+.about.in .ab-text{transition-delay:.32s}
+
+.ab-text{max-width:400px;margin-top:36px;color:var(--muted);font-size:15px;line-height:1.55}
+.ab-text p{margin:0 0 12px;text-wrap:pretty}
+.ab-cta{margin-top:22px}
+
+/* голова: обёртка слегка наклоняется за курсором; внутри — отражённое фото и линза */
+.ab-tilt{position:absolute;z-index:3;left:0;top:0;width:10px;height:10px;pointer-events:none;will-change:transform;
+  opacity:0;transition:opacity 1.4s var(--smooth)}
+.about.in .ab-tilt{opacity:1}
+.ab-photo{position:absolute;inset:0;transform:scaleX(-1);
+  -webkit-mask:linear-gradient(to bottom,#000 52%,rgba(0,0,0,.6) 70%,transparent 90%);mask:linear-gradient(to bottom,#000 52%,rgba(0,0,0,.6) 70%,transparent 90%)}
+.ab-photo img,.ab-photo .layer,.ab-photo .layer > *{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ab-lens{z-index:4}
+
+/* факты внизу — как строка услуг на первом экране; цифры досчитывают */
+.ab-facts{position:absolute;z-index:6;left:0;right:0;bottom:0;padding-block:0 26px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px}
+.ab-facts div{border-top:1px solid var(--line);padding-top:12px;opacity:0;transform:translateY(16px);transition:opacity .9s var(--smooth),transform 1.1s var(--smooth)}
+.ab-facts div:nth-child(n+3){text-align:right}
+.ab-facts b{display:block;font:800 clamp(30px,2.7vw,46px)/1 var(--f-caps);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.ab-facts span{display:block;margin-top:6px;font-size:13px;color:var(--muted)}
+.about.in .ab-facts div{opacity:1;transform:none}
+.about.in .ab-facts div:nth-child(2){transition-delay:.08s}
+.about.in .ab-facts div:nth-child(3){transition-delay:.16s}
+.about.in .ab-facts div:nth-child(4){transition-delay:.24s}
+
+/* переход из слайдера: последняя карточка сжимается в круг и садится на лицо линзой */
+.ab-blob{position:fixed;z-index:60;left:0;top:0;pointer-events:none;overflow:hidden;visibility:hidden;contain:layout paint;
+  box-shadow:0 0 0 1px rgba(255,255,255,var(--rg,0)),0 0 0 2px rgba(17,17,17,calc(var(--rg,0) * .16)),0 12px 30px rgba(0,0,0,.1)}
+.ab-blob .bg{position:absolute;inset:0;background:#FBFBF9}
+.ab-blob .in{position:absolute;left:50%;top:50%;transform-origin:0 0}
+.card.ab-gone{opacity:0!important}
+
+@media (max-width:899px){
+  .about{height:auto;max-height:none;padding-bottom:28px}
+  .ab-copy{grid-template-columns:1fr;padding-top:96px}
+  .ab-copy > *{grid-column:1}
+  .ab-l1{font-size:clamp(46px,12.5vw,80px)}
+  .ab-l2{font-size:clamp(44px,12vw,76px)}
+  .ab-tilt{position:relative;left:auto;top:auto;width:100%!important;height:auto!important;aspect-ratio:1086/1018;margin-top:12px;transform:none!important}
+  .ab-facts{position:relative;grid-template-columns:1fr 1fr;row-gap:20px;margin-top:-12vw}
+  .ab-facts div:nth-child(n+3){text-align:left}
+}
