@@ -20,6 +20,15 @@
 .fs-label::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .fs-count{margin:0;display:flex;gap:6px;font-variant-numeric:tabular-nums}
 .fs-of{opacity:.5}
+.fs-tr{display:flex;align-items:baseline;gap:clamp(18px,2.4vw,32px)}
+/* ссылка «Все проекты» рядом со счётчиком: подчёркивание проезжает при наведении */
+.fs-all{position:relative;display:inline-flex;align-items:baseline;gap:3px;text-decoration:none;padding-block:4px}
+.fs-all sup{font-size:10px;line-height:0;opacity:.55;font-variant-numeric:tabular-nums}
+.fs-all::after{content:"";position:absolute;left:0;right:0;bottom:1px;height:1px;background:currentColor;transform:scaleX(.0001);transform-origin:100% 50%;transition:transform .6s var(--smooth)}
+.fs-all:hover::after,.fs-all:focus-visible::after{transform:scaleX(1);transform-origin:0 50%}
+.fs-all,.fs-count{transition:opacity .5s var(--smooth)}
+/* на последнем слайде «Все проекты» счётчик и ссылка не нужны — слайд сам ведёт туда */
+.fs[data-all] .fs-all,.fs[data-all] .fs-count{opacity:0;pointer-events:none}
 
 /* заголовок проекта: жирный капс сверху слева, курсив снизу справа — как на первом экране */
 .fs-t1,.fs-t2{position:relative;z-index:1;display:grid;pointer-events:none}
@@ -52,6 +61,19 @@
 .csl .dm{position:absolute;inset:0;background:var(--dimc,#F3F3F1);opacity:var(--dim,0);pointer-events:none}
 .card .shd{position:absolute;left:6%;right:6%;bottom:-7%;height:16%;border-radius:50%;
   background:radial-gradient(closest-side,rgba(0,0,0,.28),transparent);transform:translateZ(-1px);opacity:.55;pointer-events:none;will-change:opacity}
+
+/* плашка «Все проекты»: число работ + мозаика из цветов проектов. Размеры в --u (1% ширины карточки) */
+.ac{position:absolute;inset:0;padding:calc(var(--u) * 6);display:grid;grid-template-columns:1fr 1.2fr;grid-template-rows:1fr auto;column-gap:calc(var(--u) * 5);row-gap:calc(var(--u) * 3.4);color:#111;background:#F3F3F1}
+.ac-l{grid-row:1/3;display:flex;flex-direction:column;min-width:0}
+.ac-k{display:flex;align-items:center;gap:calc(var(--u) * 1.6);font:500 calc(var(--u) * 3.2)/1 var(--f-sans)}
+.ac-k::before{content:"";width:calc(var(--u) * 1.2);height:calc(var(--u) * 1.2);border-radius:50%;background:currentColor}
+.ac-n{margin-top:auto;font:800 calc(var(--u) * 25)/.8 var(--f-caps);letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+.ac-w{margin-top:calc(var(--u) * 1.8);font:italic 400 calc(var(--u) * 7.4)/1 var(--f-serif);letter-spacing:-.03em}
+.ac-g{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);gap:calc(var(--u) * 1.6);min-height:0}
+.ac-g i{position:relative;overflow:hidden;border-radius:calc(var(--u) * 1.6);background:var(--t)}
+.ac-g b{position:absolute;left:14%;right:34%;top:15%;height:9%;border-radius:9px;background:rgba(255,255,255,.6)}
+.ac-g i::after{content:"";position:absolute;right:12%;bottom:0;width:46%;height:44%;border-radius:calc(var(--u) * .8) calc(var(--u) * .8) 0 0;background:rgba(255,255,255,.28)}
+.ac-go{justify-self:end;align-self:end;padding:calc(var(--u) * 1.9) calc(var(--u) * 3.6);border-radius:999px;background:#111;color:#F3F3F1;font:500 calc(var(--u) * 3)/1 var(--f-sans)}
 
 /* низ: описание слева, кнопка справа */
 .fs-bottom{grid-row:5;position:relative;z-index:3;display:flex;justify-content:space-between;align-items:center;gap:24px}

@@ -1,12 +1,16 @@
 ---
 import '../styles/header.css';
 import { TG_LINK } from '../data/ring';
+// page — какая страница сейчас открыта: подсвечивается в капсуле
+interface Props { page?: 'home' | 'projects' }
+const { page = 'home' } = Astro.props;
+const cur = (p: string) => (p === page ? 'page' : undefined);
 ---
 <header class="hdr gutter" id="hdr">
   <a class="logo" href="/" aria-label="Иван Засадыч, на главную">Иван Засадыч</a>
   <nav class="pill" id="pill" aria-label="Основная навигация">
     <span class="ind" id="ind"></span>
-    <a href="/" aria-current="page">Главная</a><a href="/#featured">Проекты</a><a href="/#featured">Обо мне</a><a href="/#featured">Контакты</a>
+    <a href="/" aria-current={cur('home')}>Главная</a><a href="/projects/" aria-current={cur('projects')}>Проекты</a><a href="/#featured" data-scroll>Обо мне</a><a href="/#featured" data-scroll>Контакты</a>
   </nav>
   <div class="hdr-r"><a class="btn btn--sm" href={TG_LINK} data-tg>Написать</a></div>
 </header>

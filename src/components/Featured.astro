@@ -2,27 +2,44 @@
 // Блок 2 «Избранные проекты»: закреплённый 3D-слайдер.
 // Скролл листает проекты, карточка в центре, соседние по бокам, фон перекрашивается под проект.
 import '../styles/featured.css';
-import { getCollection } from 'astro:content';
 import { panelHTML } from '../scripts/panel';
+import { allProjects, plural, isDark, pad } from '../data/projects';
 
-const items = (await getCollection('projects', (p) => p.data.featured))
-  .sort((a, b) => a.data.order - b.data.order)
-  .slice(0, 3)
-  .map((p) => ({
-    id: p.id,
-    url: `/projects/${p.id}/`,
-    title: p.data.title,
-    tag: p.data.tag,
-    bg: p.data.bg,
-    h: p.data.heading ?? [p.data.title, ''],
-    summary: p.data.summary,
-    html: panelHTML({ type: 'p', id: p.id, title: p.data.title, tag: p.data.tag, c: p.data.palette, map: p.data.map }),
-  }));
+const all = await allProjects();
+const featured = all.filter((p) => p.data.featured).slice(0, 3);
+const items = featured.map((p) => ({
+  id: p.id,
+  url: `/projects/${p.id}/`,
+  title: p.data.title,
+  tag: p.data.tag,
+  bg: p.data.bg,
+  h: p.data.heading ?? [p.data.title, ''],
+  summary: p.data.summary,
+  btn: 'Открыть кейс',
+  all: false,
+  html: panelHTML({ type: 'p', id: p.id, title: p.data.title, tag: p.data.tag, c: p.data.palette, map: p.data.map }),
+}));
+const nf = items.length; // сколько избранных — для счётчика 01 / 03
+const total = all.length;
+const works = `${total} ${plural(total, ['работа', 'работы', 'работ'])}`;
+
+// последний «слайд» — плашка «Все проекты»: число работ и мозаика из цветов всех проектов
+const tiles = all.slice(0, 8).map((p) => `<i style="--t:${p.data.bg}"><b></b></i>`).join('');
+items.push({
+  id: 'all',
+  url: '/projects/',
+  title: 'Все проекты',
+  tag: 'Все проекты',
+  bg: '#1A1A19',
+  h: ['Все работы', 'и пет-проекты'],
+  summary: `${works}: лендинги, многостраничники, B2B и то, что делаю для себя.`,
+  btn: 'Смотреть все',
+  all: true,
+  html: `<div class="ac"><div class="ac-l"><span class="ac-k">Все проекты</span><span class="ac-n">${pad(total)}</span><span class="ac-w">${plural(total, ['работа', 'работы', 'работ'])}</span></div><div class="ac-g">${tiles}</div><span class="ac-go">Смотреть все</span></div>`,
+});
 const n = items.length;
-// цвет текста под фон проекта: светлый на тёмном, тёмный на светлом
-const light = (h: string) => { const c = h.replace('#', ''); const [r, g, b] = [0, 2, 4].map((i) => parseInt(c.slice(i, i + 2), 16)); return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5; };
-const ink = (h: string) => (light(h) ? '#F3F3F1' : '#111111');
-const pad = (i: number) => String(i).padStart(2, '0');
+const ink = (h: string) => (isDark(h) ? '#F3F3F1' : '#111111');
+const light = isDark;
 ---
 <div class="tint" id="tint" aria-hidden="true">{items.map((it) => <i style={`background:${it.bg}`}></i>)}</div>
 
@@ -30,7 +47,10 @@ const pad = (i: number) => String(i).padStart(2, '0');
   <div class="fs" id="fs" data-pre data-tone={light(items[0].bg) ? 'light' : 'dark'}>
     <div class="fs-top gutter">
       <p class="fs-label">Избранные проекты</p>
-      <p class="fs-count" aria-live="polite"><span class="fs-num" id="fsNum">01</span><span class="fs-of">/ {pad(n)}</span></p>
+      <div class="fs-tr">
+        <a class="fs-all" href="/projects/">Все проекты<sup>{pad(total)}</sup></a>
+        <p class="fs-count" aria-live="polite"><span class="fs-num" id="fsNum">01</span><span class="fs-of">/ {pad(nf)}</span></p>
+      </div>
     </div>
 
     <div class="fs-t1 gutter" aria-hidden="true">
@@ -45,7 +65,7 @@ const pad = (i: number) => String(i).padStart(2, '0');
 
     <div class="fs-cards" id="fsCards">
       {items.map((it, i) => (
-        <a class="card" href={it.url} data-id={it.id} data-i={i} data-bg={it.bg} data-tone={light(it.bg) ? 'light' : 'dark'} aria-label={`Открыть кейс: ${it.title}`}>
+        <a class={it.all ? 'card card--all' : 'card'} href={it.url} data-id={it.id} data-i={i} data-bg={it.bg} data-tone={light(it.bg) ? 'light' : 'dark'} data-all={it.all ? '' : undefined} aria-label={it.all ? `Все проекты: ${works}` : `Открыть кейс: ${it.title}`}>
           <div class="card-rig"><div class="card-flat" set:html={it.html} /></div>
         </a>
       ))}
@@ -64,7 +84,7 @@ const pad = (i: number) => String(i).padStart(2, '0');
     </div>
 
     <nav class="fs-dots" id="fsDots" aria-label="Проекты">
-      {items.map((it, i) => <button type="button" data-i={i} aria-label={`${i + 1}. ${it.title}`} aria-current={i === 0 ? 'true' : undefined}><i></i></button>)}
+      {items.map((it, i) => <button type="button" data-i={i} data-btn={it.btn} aria-label={it.all ? 'Все проекты' : `${i + 1}. ${it.title}`} aria-current={i === 0 ? 'true' : undefined}><i></i></button>)}
     </nav>
 
     <div class="fs-hint" id="fsHint" aria-hidden="true"><span>Листайте</span><b><i id="fsBar"></i></b></div>

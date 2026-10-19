@@ -34,7 +34,7 @@ export function initFeatured() {
     }
     const shd = document.createElement('div'); shd.className = 'shd'; rig.prepend(shd);
     el.classList.add('ready');
-    return { el, i, sl, bg, light: el.dataset.tone === 'light', url: el.getAttribute('href'), tr: '', dim: '', z: '', lift: 0, tx: 0, ty: 0 };
+    return { el, i, sl, bg, all: el.hasAttribute('data-all'), light: el.dataset.tone === 'light', url: el.getAttribute('href'), tr: '', dim: '', z: '', lift: 0, tx: 0, ty: 0 };
   });
 
   const S = { W: 600, H: 328, sw: 60, cx: 0, cy: 0, sp: 500, step: 600, docTop: 0, stTop: 0, vw: 1, vh: 1 };
@@ -113,9 +113,10 @@ export function initFeatured() {
   const tip = document.createElement('div'); tip.className = 'fs-tip'; document.body.appendChild(tip);
   let hov = null, px = 0, py = 0;
   C.forEach((c) => {
-    c.el.addEventListener('pointerenter', (e) => { if (e.pointerType === 'touch') return; hov = c; tip.textContent = c.i === idx ? 'Открыть кейс' : c.i > idx ? 'Следующий проект' : 'Предыдущий проект'; tip.classList.add('on'); });
+    c.el.addEventListener('pointerenter', (e) => { if (e.pointerType === 'touch') return; hov = c; tip.textContent = tipText(c); tip.classList.add('on'); });
     c.el.addEventListener('pointerleave', () => { if (hov === c) hov = null; tip.classList.remove('on'); });
   });
+  function tipText(c) { return c.i === idx ? (c.all ? 'Все проекты' : 'Открыть кейс') : c.all ? 'Все проекты' : c.i > idx ? 'Следующий проект' : 'Предыдущий проект'; }
   let tX = 0, tY = 0;
   addEventListener('pointermove', (e) => {
     px = e.clientX; py = e.clientY;
@@ -133,12 +134,14 @@ export function initFeatured() {
     if (i === idx) return; idx = i;
     titles.forEach((t) => { const j = +t.dataset.i; t.dataset.s = j < i ? 'prev' : j > i ? 'next' : 'cur'; });
     dots.forEach((b, j) => (j === i ? b.setAttribute('aria-current', 'true') : b.removeAttribute('aria-current')));
-    num.textContent = String(i + 1).padStart(2, '0');
+    if (!C[i].all) num.textContent = String(i + 1).padStart(2, '0');
+    fs.toggleAttribute('data-all', C[i].all); // последний слайд «Все проекты»: счётчик и верхняя ссылка прячутся
     open.setAttribute('href', C[i].url);
+    if (open.textContent !== dots[i].dataset.btn) open.textContent = dots[i].dataset.btn;
     fs.dataset.tone = C[i].light ? 'light' : 'dark';
     cardsBox.style.setProperty('--dimc', C[i].bg);
     if (meta && !pre) meta.content = C[i].bg;
-    if (hov) tip.textContent = hov.i === i ? 'Открыть кейс' : hov.i > i ? 'Следующий проект' : 'Предыдущий проект';
+    if (hov) tip.textContent = tipText(hov);
   }
 
   function frame(now, dt) {

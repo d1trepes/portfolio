@@ -1,0 +1,139 @@
+---
+// Страница «Все проекты»: сетка всех работ с фильтром по разделам.
+// Проекты берутся из src/content/projects, порядок — поле order, раздел — поле kind.
+import Base from '../../layouts/Base.astro';
+import '../../styles/panel.css';
+import '../../styles/projects.css';
+import { allProjects, KINDS, KIND_ONE, plural, pad } from '../../data/projects';
+import { panelHTML } from '../../scripts/panel';
+import { TG_LINK } from '../../data/ring';
+
+const list = await allProjects();
+const total = list.length;
+const filters = [
+  { k: 'all', label: 'Все', n: total },
+  ...Object.entries(KINDS).map(([k, label]) => ({ k, label, n: list.filter((p) => p.data.kind === k).length })).filter((f) => f.n > 0),
+];
+---
+<Base title="Все проекты — Иван Засадыч" description="Лендинги, многостраничные и B2B-сайты, пет-проекты: все работы Ивана Засадыча." page="projects">
+  <main class="ap gutter" id="ap">
+    <script is:inline>document.documentElement.classList.add('js')</script>
+
+    <header class="ap-head">
+      <div class="ap-top">
+        <p class="ap-label">Все проекты</p>
+        <p class="ap-total">{pad(total)} {plural(total, ['работа', 'работы', 'работ'])}</p>
+      </div>
+      <h1>
+        <span class="ap-l1"><span>Все работы</span></span>
+        <span class="ap-l2"><span>и&nbsp;пет-проекты</span></span>
+      </h1>
+      <div class="ap-bar">
+        <p class="ap-lead">Коммерческие сайты и&nbsp;то, что делаю для себя, чтобы пробовать новое. Каждый кейс — с&nbsp;задачей, решениями и&nbsp;результатом.</p>
+        <div class="ap-filter" id="apFilter" role="group" aria-label="Фильтр проектов">
+          <span class="ap-ind" id="apInd"></span>
+          {filters.map((f, i) => (
+            <button type="button" data-f={f.k} aria-pressed={i === 0 ? 'true' : 'false'}>{f.label}<sup>{f.n}</sup></button>
+          ))}
+        </div>
+      </div>
+    </header>
+
+    <ul class="ap-grid" id="apGrid">
+      {list.map((p, i) => (
+        <li class="pj" data-kind={p.data.kind} style={`--i:${i % 2}`}>
+          <a href={`/projects/${p.id}/`} aria-label={`${p.data.title} — открыть кейс`}>
+            <div class="pj-cover" style={`--bg:${p.data.bg}`}>
+              <div class="pj-shot" set:html={panelHTML({ type: 'p', id: p.id, title: p.data.title, tag: p.data.tag, c: p.data.palette, map: p.data.map })} />
+            </div>
+            <div class="pj-meta">
+              <span class="pj-n">{pad(i + 1)}</span>
+              <h2>{p.data.title}</h2>
+              <span class="pj-k">{KIND_ONE[p.data.kind]}{p.data.year && ` · ${p.data.year}`}</span>
+            </div>
+            {p.data.summary && <p class="pj-s">{p.data.summary}</p>}
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <section class="ap-end" aria-label="Связаться">
+      <p class="ap-end__t"><span>Похожая задача?</span><em>Обсудим вашу</em></p>
+      <div class="ap-end__r">
+        <p>Напишите пару слов о&nbsp;проекте — отвечу в&nbsp;тот же день.</p>
+        <a class="btn" href={TG_LINK} data-tg>Написать в Telegram</a>
+      </div>
+    </section>
+
+    <!-- Скрипт внутри страницы: фильтр, появление карточек, подсказка у курсора -->
+    <script is:inline>
+      (() => {
+        const root = document.getElementById('ap');
+        const grid = root.querySelector('#apGrid'), bar = root.querySelector('#apFilter'), ind = root.querySelector('#apInd');
+        const items = [...grid.children], btns = [...bar.querySelectorAll('button')];
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // плавное появление карточек при прокрутке
+        const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+        items.forEach((el) => io.observe(el));
+
+        // подсветка выбранного раздела «едет» под кнопку, как в шапке
+        const place = (b, instant) => {
+          if (instant) ind.style.transition = 'none';
+          ind.style.width = b.offsetWidth + 'px'; ind.style.transform = `translateX(${b.offsetLeft}px)`;
+          if (instant) { ind.offsetWidth; ind.style.transition = ''; }
+        };
+        let cur = 'all', busy = 0;
+        const apply = (k) => {
+          items.forEach((el) => { el.hidden = !(k === 'all' || el.dataset.kind === k); });
+          let j = 0;
+          items.forEach((el) => {
+            if (el.hidden) return;
+            el.classList.remove('in'); el.style.setProperty('--d', (j++ * 70) + 'ms');
+          });
+          grid.offsetWidth;
+          items.forEach((el) => { if (!el.hidden) io.observe(el); });
+        };
+        const choose = (k, push) => {
+          if (k === cur) return;
+          const b = btns.find((x) => x.dataset.f === k); if (!b) return;
+          cur = k;
+          btns.forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+          place(b);
+          if (push) { const u = new URL(location.href); k === 'all' ? u.searchParams.delete('f') : u.searchParams.set('f', k); history.replaceState(null, '', u); }
+          clearTimeout(busy);
+          if (reduce) { apply(k); return; }
+          grid.classList.add('out');
+          busy = setTimeout(() => { apply(k); grid.classList.remove('out'); }, 280);
+        };
+        btns.forEach((b) => b.addEventListener('click', () => choose(b.dataset.f, true)));
+        const init = () => place(btns.find((x) => x.dataset.f === cur), true);
+        const f0 = new URLSearchParams(location.search).get('f');
+        if (f0 && btns.some((x) => x.dataset.f === f0)) {
+          cur = f0; btns.forEach((x) => x.setAttribute('aria-pressed', x.dataset.f === f0 ? 'true' : 'false')); apply(f0);
+        }
+        init(); addEventListener('resize', init); document.fonts && document.fonts.ready.then(init);
+        // в предпросмотре страница открывается поверх главной — подсветку ставим, когда она стала видимой
+        addEventListener('hashchange', () => setTimeout(init, 30));
+
+        // подсказка «Открыть кейс» у курсора
+        if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+          const tip = document.createElement('div'); tip.className = 'pj-tip'; tip.textContent = 'Открыть кейс'; document.body.appendChild(tip);
+          grid.addEventListener('pointerover', (e) => { if (e.target.closest('.pj-cover')) tip.classList.add('on'); });
+          grid.addEventListener('pointerout', (e) => { if (e.target.closest('.pj-cover') && !e.relatedTarget?.closest?.('.pj-cover')) tip.classList.remove('on'); });
+          addEventListener('pointermove', (e) => { if (tip.classList.contains('on')) tip.style.transform = `translate3d(${e.clientX + 16}px,${e.clientY + 18}px,0)`; }, { passive: true });
+        }
+      })();
+    </script>
+  </main>
+</Base>
+
+<script>
+  // плавный скролл, как на главной
+  import Lenis from 'lenis';
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const lenis = new Lenis({ lerp: 0.085, smoothWheel: true });
+    const raf = (t: number) => { lenis.raf(t); requestAnimationFrame(raf); };
+    requestAnimationFrame(raf);
+  }
+</script>

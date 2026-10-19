@@ -49,18 +49,30 @@ html = re.sub(r'<script type="module" src="([^"]+)"></script>',
 for name in ('portrait', 'mesh', 'sil', 'sild'):
     html = html.replace(f'/hero/{name}.webp', b64(dist(f'hero/{name}.webp'), 'image/webp'))
 
-# кейсы → всплывающие экраны
-cases = []
-for pid in sorted(os.listdir(dist('projects'))):
+# кейсы и страница «Все проекты» → всплывающие экраны (#case-<id>, #projects)
+index_links = set(re.findall(r'<link rel="stylesheet" href="([^"]+)">', open(dist('index.html'), encoding='utf-8').read()))
+pids = sorted(d for d in os.listdir(dist('projects')) if os.path.isdir(dist(f'projects/{d}')))
+pops, extra_css = [], []
+for pid in pids:
     page = open(dist(f'projects/{pid}/index.html'), encoding='utf-8').read()
     main = re.search(r'<main.*?</main>', page, re.S).group(0)
-    main = main.replace('href="/#featured"', 'href="#featured"')
-    cases.append(f'<div class="case-pop" id="case-{pid}">{main}</div>')
-    html = html.replace(f'href="/projects/{pid}/"', f'href="#case-{pid}"')
-case_css = re.findall(r'<style>(.*?)</style>', open(dist(f'projects/{pid}/index.html'), encoding='utf-8').read(), re.S)
-case_css = [c for c in case_css if 'case-stub' in c]
+    pops.append(f'<div class="case-pop" id="case-{pid}">{main}</div>')
+case_page = open(dist(f'projects/{pids[0]}/index.html'), encoding='utf-8').read()
+extra_css += [c for c in re.findall(r'<style>(.*?)</style>', case_page, re.S) if 'case-stub' in c]
+
+all_page = open(dist('projects/index.html'), encoding='utf-8').read()
+main = re.search(r'<main.*?</main>', all_page, re.S).group(0)
+pops.append(f'<div class="case-pop" id="projects">{main}</div>')
+for href in re.findall(r'<link rel="stylesheet" href="([^"]+)">', all_page):
+    if href not in index_links:
+        extra_css.append(inline_css(open(dist(href), encoding='utf-8').read()))
+extra_css += [c for c in re.findall(r'<style>(.*?)</style>', all_page, re.S) if '.ap' in c or '.pj' in c]
+
 html = html.replace('</body>', '<style>.case-pop{display:none;position:fixed;inset:0;z-index:90;background:var(--bg);overflow:auto}.case-pop:target{display:block}'
-                    + ''.join(case_css) + '</style>' + ''.join(cases) + '</body>')
+                    + ''.join(extra_css) + '</style>' + ''.join(pops) + '</body>')
+for pid in pids:
+    html = html.replace(f'href="/projects/{pid}/"', f'href="#case-{pid}"')
+html = html.replace('href="/projects/"', 'href="#projects"')
 
 html = html.replace('href="/#featured"', 'href="#featured"').replace('href="/"', 'href="#"')
 html = re.sub(r'<title>.*?</title>', '<title>Сайт Ивана Засадыча</title>', html, count=1)

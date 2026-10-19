@@ -18,6 +18,9 @@ const projects = defineCollection({
     bg: z.string().default('#D9D9D5'),            // цвет фона под этот проект
     heading: z.tuple([z.string(), z.string()]).optional(), // [жирная часть капсом, курсивная часть]
     summary: z.string().default(''),              // одна-две строки под заголовком
+    // Страница «Все проекты»:
+    kind: z.enum(['landing', 'multipage', 'b2b', 'pet']), // раздел фильтра: лендинг / многостраничник / B2B / пет-проект
+    year: z.string().optional(),                  // год, показывается под карточкой
   }),
 });
 

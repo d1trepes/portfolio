@@ -32,6 +32,7 @@ export function initHero(F) {
     return silData[(Math.floor(py / G.photo.h * SH) * SW + Math.floor(px / G.photo.w * SW)) * 4 + 3] > 90;
   }
 
+  const allCard = document.querySelector('#fsCards .card--all');
   let hoverP = null;
   // подсказка у курсора над панелью-проектом
   const tip = document.createElement('div'); tip.className = 'ring-tip'; tip.textContent = 'Открыть кейс'; stage.appendChild(tip);
@@ -111,7 +112,7 @@ export function initHero(F) {
   F.lenis = lenis;
   const goProjects = (e) => { e.preventDefault(); const y = F.docTop(); lenis ? lenis.scrollTo(y, { duration: 1.6 }) : scrollTo({ top: y, behavior: 'smooth' }); };
   $('#toProjects').addEventListener('click', goProjects);
-  document.querySelectorAll('#pill a:not([aria-current])').forEach((a) => a.addEventListener('click', goProjects));
+  document.querySelectorAll('#pill a[data-scroll]').forEach((a) => a.addEventListener('click', goProjects));
 
   // кольцо можно крутить мышкой/пальцем: зажал и тянешь; отпустил — крутится дальше по инерции и плавно возвращается к своей скорости
   const D = { on: false, moved: false, x: 0, v: 0, t: 0, id: null };
@@ -174,6 +175,8 @@ export function initHero(F) {
       });
       const lq = Math.round(land * 10) / 10;
       PANELS.forEach((pn) => { if (pn.slot && pn.lq !== lq) { pn.lq = lq; pn.slot.style.opacity = lq; pn.slot.style.visibility = lq > 0 ? 'visible' : 'hidden'; } });
+      // плашка «Все проекты» не летит из кольца — просто проявляется вместе с карточками
+      if (allCard && allCard._lq !== lq) { allCard._lq = lq; allCard.style.opacity = lq; allCard.style.visibility = lq > 0 ? 'visible' : 'hidden'; }
       lastP = p; dirty = false;
     }
 

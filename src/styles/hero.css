@@ -1,3 +1,4 @@
+@import './panel.css';
 /* ---------- hero ---------- */
 .stage{position:relative;overflow-x:clip}
 .hero{position:relative;height:max(740px,100svh);max-height:1100px;overflow:clip}
@@ -63,24 +64,6 @@ h1{display:contents}
 .slice .in{position:absolute;top:0}
 .scene--front .slice.proj{pointer-events:auto;cursor:pointer}
 
-/* содержимое панели: размеры в долях ширины панели (--u = 1% ширины, задаётся скриптом один раз) —
-   без container queries, они очень тормозили перерисовку */
-.pc{position:absolute;inset:calc(var(--u) * 2.6);border-radius:calc(var(--u) * 3.4);overflow:hidden;background:var(--c1)}
-.pc .bar{position:absolute;left:calc(var(--u) * 6);right:calc(var(--u) * 6);top:calc(var(--u) * 5.5);height:calc(var(--u) * 2.4);display:flex;gap:calc(var(--u) * 2)}
-.pc .bar i{height:100%;width:calc(var(--u) * 7);border-radius:calc(var(--u) * 9);background:var(--c2);opacity:.45}
-.pc .bar i:first-child{width:calc(var(--u) * 11);opacity:1}
-.pc .bar i:last-child{margin-left:auto;width:calc(var(--u) * 12);opacity:1}
-.pc .h{position:absolute;left:calc(var(--u) * 6);top:calc(var(--u) * 13);width:calc(var(--u) * 44);height:calc(var(--u) * 5.4);border-radius:calc(var(--u) * .6);background:var(--c2)}
-.pc .h2{position:absolute;left:calc(var(--u) * 6);top:calc(var(--u) * 20.5);width:calc(var(--u) * 30);height:calc(var(--u) * 5.4);border-radius:calc(var(--u) * .6);background:var(--c2);opacity:.5}
-.pc .p{position:absolute;left:calc(var(--u) * 6);top:calc(var(--u) * 29.5);width:calc(var(--u) * 26);height:calc(var(--u) * 1.6);border-radius:calc(var(--u) * 2);background:var(--c2);opacity:.28;box-shadow:0 calc(var(--u) * 3) 0 var(--c2)}
-.pc .blk{position:absolute;right:calc(var(--u) * 6);bottom:0;width:calc(var(--u) * 36);height:calc(var(--u) * 34);border-radius:calc(var(--u) * 2) calc(var(--u) * 2) 0 0;background:var(--c3)}
-.pc .pin{position:absolute;right:calc(var(--u) * 17);bottom:calc(var(--u) * 14);width:calc(var(--u) * 4.4);height:calc(var(--u) * 4.4);border-radius:50%;background:var(--c2);box-shadow:0 0 0 calc(var(--u) * 2) color-mix(in srgb,var(--c2) 18%,transparent)}
-.pc .chip{position:absolute;left:calc(var(--u) * 4);bottom:calc(var(--u) * 4);padding:calc(var(--u) * 1.4) calc(var(--u) * 2.8);border-radius:calc(var(--u) * 9);font:500 calc(var(--u) * 3.3)/1 var(--f-sans);background:rgba(255,255,255,.88);color:#111}
-.tc{position:absolute;inset:0;padding:calc(var(--u) * 7);display:flex;flex-direction:column}
-.tc .ic{width:calc(var(--u) * 13);height:calc(var(--u) * 13);border-radius:50%;display:grid;place-items:center;background:var(--ink);color:#fff}
-.tc .ic svg{width:calc(var(--u) * 6);height:calc(var(--u) * 6)}
-.tc b{margin-top:auto;font:600 calc(var(--u) * 7.4)/1.1 var(--f-sans);letter-spacing:-.02em}
-.tc span{margin-top:calc(var(--u) * 1.8);font:400 calc(var(--u) * 4.6)/1.35 var(--f-sans);color:#5f5f5a}
 /* панели-проекты кликабельны: текстовый слой пропускает клики сквозь пустые места */
 .copy,.services{pointer-events:none}
 .copy > *,.copy h1 > span{pointer-events:auto}
