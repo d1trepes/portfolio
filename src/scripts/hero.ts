@@ -5,7 +5,7 @@ import { panelHTML } from './panel';
 
 export function initHero(F) {
   const PANELS = JSON.parse(document.getElementById('panels-data').textContent);
-  const N = 10, TAU = Math.PI * 2, SPAN = 40 * Math.PI / 180, dA = SPAN / N, FRONT = .3;
+  const N = 8, TAU = Math.PI * 2, SPAN = 40 * Math.PI / 180, dA = SPAN / N, FRONT = .3;
   const HEAD = { x: .62, top: .098 }; // центр головы по горизонтали — доля ширины фото
   const $ = (s) => document.querySelector(s);
   const stage = $('#stage'), hero = $('#hero'), photo = $('#photo'), layer = $('#layer'), lens = $('#lens'), ring = $('#ring'), hint = $('#hint');
@@ -83,7 +83,7 @@ export function initHero(F) {
     [sceneF, sceneB].forEach((s) => s.style.perspectiveOrigin = `${G.cx}px ${G.cy}px`);
     slices.forEach((o) => {
       o.el.style.width = (G.sw + 1.6) + 'px'; o.el.style.height = G.H + 'px'; o.el.style.setProperty('--rad', G.rad + 'px');
-      o.inner.style.width = G.W + 'px'; o.inner.style.height = G.H + 'px'; o.inner.style.left = (-o.k * G.sw) + 'px';
+      o.inner.style.width = G.W + 'px'; o.inner.style.height = G.H + 'px'; o.inner.style.setProperty('--u', G.W / 100 + 'px'); o.inner.style.left = (-o.k * G.sw) + 'px';
     });
     // панели-проекты приземляются в карточки слайдера «Избранные проекты»
     F.measure(stage);
@@ -140,13 +140,15 @@ export function initHero(F) {
             X = lerp(X, fxC, p); Y = lerp(0, fyC, p); Z = lerp(Z, 0, p); ph = lerp(phR, 0, p); S = lerp(1, s, p); front = panelFront || p > .45;
           }
           o.el.style.transform = `translate3d(${(X - G.sw / 2).toFixed(2)}px,${(Y - G.H / 2).toFixed(2)}px,${Z.toFixed(2)}px) rotateY(${ph.toFixed(4)}rad) scale(${S.toFixed(4)})`;
-          const l = Math.round(236 + 8 * Math.cos(ph + .55) + 8 * (1 - Math.abs(Math.sin(ph)) * .6));
+          // оттенок округляем крупно: меньше перерисовок, глазу не заметно
+          const l = p > 0 ? 251 : Math.round((236 + 8 * Math.cos(ph + .55) + 8 * (1 - Math.abs(Math.sin(ph)) * .6)) / 3) * 3;
           const sh = `rgb(${l},${l},${l - 2})`; if (sh !== o.shade) { o.el.style.setProperty('--sh', sh); o.shade = sh; }
-          const a = proj ? (pn.off ? clamp(1 - (p - .12) / .3, 0, 1) : 1 - land) : decoA; if (a !== o.a) { o.f.style.opacity = o.b.style.opacity = a; o.el.style.visibility = a > 0 ? 'visible' : 'hidden'; o.a = a; }
+          const a = Math.round((proj ? (pn.off ? clamp(1 - (p - .12) / .3, 0, 1) : 1 - land) : decoA) * 10) / 10; if (a !== o.a) { o.f.style.opacity = o.b.style.opacity = a; o.el.style.visibility = a > 0 ? 'visible' : 'hidden'; o.a = a; }
           if (front !== o.front) { (front ? rigF : rigB).appendChild(o.el); o.front = front; }
         });
       });
-      PANELS.forEach((pn) => { if (pn.slot) { pn.slot.style.opacity = land; pn.slot.style.visibility = land > 0 ? 'visible' : 'hidden'; } });
+      const lq = Math.round(land * 10) / 10;
+      PANELS.forEach((pn) => { if (pn.slot && pn.lq !== lq) { pn.lq = lq; pn.slot.style.opacity = lq; pn.slot.style.visibility = lq > 0 ? 'visible' : 'hidden'; } });
       lastP = p; dirty = false;
     }
 

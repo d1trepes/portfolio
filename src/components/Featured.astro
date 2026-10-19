@@ -19,30 +19,33 @@ const items = (await getCollection('projects', (p) => p.data.featured))
     html: panelHTML({ type: 'p', id: p.id, title: p.data.title, tag: p.data.tag, c: p.data.palette, map: p.data.map }),
   }));
 const n = items.length;
+// цвет текста под фон проекта: светлый на тёмном, тёмный на светлом
+const light = (h: string) => { const c = h.replace('#', ''); const [r, g, b] = [0, 2, 4].map((i) => parseInt(c.slice(i, i + 2), 16)); return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5; };
+const ink = (h: string) => (light(h) ? '#F3F3F1' : '#111111');
 const pad = (i: number) => String(i).padStart(2, '0');
 ---
-<div class="tint" id="tint" aria-hidden="true"></div>
+<div class="tint" id="tint" aria-hidden="true">{items.map((it) => <i style={`background:${it.bg}`}></i>)}</div>
 
 <section class="featured" id="featured" style={`--n:${n}`} aria-label="Избранные проекты">
-  <div class="fs" id="fs">
+  <div class="fs" id="fs" data-pre data-tone={light(items[0].bg) ? 'light' : 'dark'}>
     <div class="fs-top gutter">
       <p class="fs-label">Избранные проекты</p>
       <p class="fs-count" aria-live="polite"><span class="fs-num" id="fsNum">01</span><span class="fs-of">/ {pad(n)}</span></p>
     </div>
 
     <div class="fs-t1 gutter" aria-hidden="true">
-      {items.map((it, i) => <span class="ft" data-i={i} data-s={i === 0 ? 'cur' : 'next'}><span>{it.h[0]}</span></span>)}
+      {items.map((it, i) => <span class="ft" data-i={i} data-s={i === 0 ? 'cur' : 'next'} style={`--pi:${ink(it.bg)}`}><span>{it.h[0]}</span></span>)}
     </div>
 
     <div class="fs-zone" id="fsZone"></div>
 
     <div class="fs-t2 gutter" aria-hidden="true">
-      {items.map((it, i) => <span class="ft" data-i={i} data-s={i === 0 ? 'cur' : 'next'}><span>{it.h[1]}</span></span>)}
+      {items.map((it, i) => <span class="ft" data-i={i} data-s={i === 0 ? 'cur' : 'next'} style={`--pi:${ink(it.bg)}`}><span>{it.h[1]}</span></span>)}
     </div>
 
     <div class="fs-cards" id="fsCards">
       {items.map((it, i) => (
-        <a class="card" href={it.url} data-id={it.id} data-i={i} data-bg={it.bg} aria-label={`Открыть кейс: ${it.title}`}>
+        <a class="card" href={it.url} data-id={it.id} data-i={i} data-bg={it.bg} data-tone={light(it.bg) ? 'light' : 'dark'} aria-label={`Открыть кейс: ${it.title}`}>
           <div class="card-rig"><div class="card-flat" set:html={it.html} /></div>
         </a>
       ))}
@@ -51,7 +54,7 @@ const pad = (i: number) => String(i).padStart(2, '0');
     <div class="fs-bottom gutter">
       <div class="fs-info">
         {items.map((it, i) => (
-          <div class="fi" data-i={i} data-s={i === 0 ? 'cur' : 'next'}>
+          <div class="fi" data-i={i} data-s={i === 0 ? 'cur' : 'next'} style={`--pi:${ink(it.bg)}`}>
             <small>{it.tag}</small>
             <p>{it.summary}</p>
           </div>

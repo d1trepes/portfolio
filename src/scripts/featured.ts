@@ -5,31 +5,25 @@
 
 export function initFeatured() {
   const $ = (s, r = document) => r.querySelector(s);
-  const sec = $('#featured'), fs = $('#fs'), zone = $('#fsZone'), tintEl = $('#tint');
+  const sec = $('#featured'), fs = $('#fs'), zone = $('#fsZone'), tintEl = $('#tint'), cardsBox = $('#fsCards');
+  const tints = [...tintEl.children];
   const cards = [...document.querySelectorAll('#fsCards .card')];
   const titles = [...document.querySelectorAll('.fs-t1 .ft, .fs-t2 .ft, .fs-info .fi')];
   const dots = [...document.querySelectorAll('#fsDots button')];
-  const num = $('#fsNum'), open = $('#fsOpen'), bar = $('#fsBar'), root = document.documentElement;
+  const num = $('#fsNum'), open = $('#fsOpen'), bar = $('#fsBar'), root = document.documentElement, meta = document.querySelector('meta[name=theme-color]');
   const n = cards.length;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
-  const N = innerWidth < 900 ? 8 : 10;
+  const N = innerWidth < 900 ? 6 : 8;
   const lerp = (a, b, t) => a + (b - a) * t, clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const sstep = (t) => t * t * (3 - 2 * t);
-  const DEG = Math.PI / 180;
-
-  // цвета проектов
-  const hex = (h) => { h = h.replace('#', ''); if (h.length === 3) h = [...h].map((c) => c + c).join(''); return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)); };
-  const lum = ([r, g, b]) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-  const BASE = hex('#F3F3F1'), INK = hex('#111111'), LIGHT = hex('#F3F3F1');
-  const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
-  const rgb = (c) => `rgb(${c[0]},${c[1]},${c[2]})`;
+  const q = (v, st) => Math.round(v / st) * st; // округление: меньше лишних перерисовок
 
   // карточки → тонкие вертикальные полосы, как панели кольца (так их можно изгибать)
   const C = cards.map((el, i) => {
     const rig = el.querySelector('.card-rig');
     const html = el.querySelector('.card-flat').innerHTML;
-    const bg = hex(el.dataset.bg || '#D9D9D5');
+    const bg = el.dataset.bg || '#D9D9D5';
     const sl = [];
     for (let k = 0; k < N; k++) {
       const s = document.createElement('div');
@@ -40,7 +34,7 @@ export function initFeatured() {
     }
     const shd = document.createElement('div'); shd.className = 'shd'; rig.prepend(shd);
     el.classList.add('ready');
-    return { el, i, sl, bg, ink: lum(bg) < 0.5 ? LIGHT : INK, url: el.getAttribute('href'), tr: '', dim: '', lift: 0, tx: 0, ty: 0 };
+    return { el, i, sl, bg, light: el.dataset.tone === 'light', url: el.getAttribute('href'), tr: '', dim: '', z: '', lift: 0, tx: 0, ty: 0 };
   });
 
   const S = { W: 600, H: 328, sw: 60, cx: 0, cy: 0, sp: 500, step: 600, docTop: 0, stTop: 0, vw: 1, vh: 1 };
@@ -51,8 +45,8 @@ export function initFeatured() {
     S.vw = document.documentElement.clientWidth; S.vh = innerHeight;
     const fr = fs.getBoundingClientRect(), zr = zone.getBoundingClientRect();
     const mobile = S.vw < 900;
-    const maxW = mobile ? S.vw - 48 : Math.min(S.vw * 0.52, 1000);
-    S.W = Math.max(200, Math.min(maxW, (zr.height + (mobile ? 10 : 30)) * 1.83));
+    const maxW = mobile ? S.vw - 48 : Math.min(S.vw * 0.46, 900);
+    S.W = Math.max(200, Math.min(maxW, zr.height * 1.83));
     S.H = S.W / 1.83; S.sw = S.W / N;
     S.cx = zr.left - fr.left + zr.width / 2; S.cy = zr.top - fr.top + zr.height / 2;
     S.sp = S.W * (mobile ? 0.84 : 0.92);
@@ -65,7 +59,7 @@ export function initFeatured() {
       c.el.style.width = S.W + 'px'; c.el.style.height = S.H + 'px';
       c.sl.forEach((o) => {
         o.el.style.width = (S.sw + 1.6) + 'px'; o.el.style.height = S.H + 'px'; o.el.style.setProperty('--rad', rad + 'px');
-        o.inner.style.width = S.W + 'px'; o.inner.style.height = S.H + 'px'; o.inner.style.left = (-o.k * S.sw) + 'px';
+        o.inner.style.width = S.W + 'px'; o.inner.style.height = S.H + 'px'; o.inner.style.setProperty('--u', S.W / 100 + 'px'); o.inner.style.left = (-o.k * S.sw) + 'px';
         o.tr = '';
       });
       c.tr = '';
@@ -122,19 +116,28 @@ export function initFeatured() {
     c.el.addEventListener('pointerenter', (e) => { if (e.pointerType === 'touch') return; hov = c; tip.textContent = c.i === idx ? 'Открыть кейс' : c.i > idx ? 'Следующий проект' : 'Предыдущий проект'; tip.classList.add('on'); });
     c.el.addEventListener('pointerleave', () => { if (hov === c) hov = null; tip.classList.remove('on'); });
   });
+  let tX = 0, tY = 0;
   addEventListener('pointermove', (e) => {
     px = e.clientX; py = e.clientY;
+    if (hov && hov.i === idx && fine && !reduce) {
+      const r = hov.el.getBoundingClientRect();
+      tX = clamp(((px - r.left) / r.width - 0.5) * 2, -1, 1); tY = clamp(((py - r.top) / r.height - 0.5) * 2, -1, 1);
+    } else { tX = tY = 0; }
     if (tip.classList.contains('on')) tip.style.transform = `translate3d(${px + 16}px,${py + 18}px,0)`;
   }, { passive: true });
 
   // ---------- кадр ----------
-  let fsm = 0, fPrev = 0, vs = 0, idx = -1, dirty = true, lastY = -1, lastMove = 0, snapping = false, snapT = 0, inPin = false, lastVars = '';
+  let fsm = 0, fPrev = 0, vs = 0, idx = -1, dirty = true, lastY = -1, lastMove = 0, snapping = false, snapT = 0, inPin = false;
+  let tintOp = '', tintMix = '', pre = null, hdrLight = null;
   function setIdx(i) {
     if (i === idx) return; idx = i;
     titles.forEach((t) => { const j = +t.dataset.i; t.dataset.s = j < i ? 'prev' : j > i ? 'next' : 'cur'; });
     dots.forEach((b, j) => (j === i ? b.setAttribute('aria-current', 'true') : b.removeAttribute('aria-current')));
     num.textContent = String(i + 1).padStart(2, '0');
     open.setAttribute('href', C[i].url);
+    fs.dataset.tone = C[i].light ? 'light' : 'dark';
+    cardsBox.style.setProperty('--dimc', C[i].bg);
+    if (meta && !pre) meta.content = C[i].bg;
     if (hov) tip.textContent = hov.i === i ? 'Открыть кейс' : hov.i > i ? 'Следующий проект' : 'Предыдущий проект';
   }
 
@@ -151,7 +154,7 @@ export function initFeatured() {
     const exit = clamp(1 - (y - endPin) / (S.vh * 0.5), 0, 1);
     const op = sstep(Math.min(enter, exit));
 
-    if (!near && !dirty && Math.abs(fsm - fT) < 0.001) { if (lastVars !== 'off') { tintEl.style.opacity = 0; root.style.removeProperty('--hdr-ink'); lastVars = 'off'; } return; }
+    if (!near && !dirty && Math.abs(fsm - fT) < 0.001) { if (tintOp !== '0') { tintEl.style.opacity = 0; tintOp = '0'; root.classList.remove('hdr-light'); hdrLight = false; } return; }
 
     // плавное следование за скроллом и скорость (для изгиба)
     fsm = reduce ? fT : lerp(fsm, fT, 0.2); if (Math.abs(fsm - fT) < 0.0005) fsm = fT;
@@ -162,19 +165,20 @@ export function initFeatured() {
 
     setIdx(clamp(Math.round(fsm), 0, n - 1));
 
-    // цвета
+    // цвета: только прозрачность слоёв, без перекраски страницы
     const i0 = Math.floor(fsm), i1 = Math.min(n - 1, i0 + 1), t = sstep(fsm - i0);
-    const bg = mix(C[i0].bg, C[i1].bg, t), ink = mix(C[i0].ink, C[i1].ink, t);
-    const shown = mix(BASE, bg, op), txt = mix(INK, ink, op);
-    const vars = rgb(bg) + rgb(txt) + op.toFixed(3);
-    if (vars !== lastVars) {
-      lastVars = vars;
-      root.style.setProperty('--tint', rgb(bg)); root.style.setProperty('--tink', rgb(txt));
-      root.style.setProperty('--hdr-ink', rgb(txt));
-      tintEl.style.opacity = op.toFixed(3);
-      const meta = document.querySelector('meta[name=theme-color]'); if (meta) meta.content = rgb(shown);
+    const o = q(op, 0.01).toFixed(2);
+    if (o !== tintOp) { tintEl.style.opacity = o; tintOp = o; }
+    const mixKey = i0 + ':' + q(t, 0.01).toFixed(2);
+    if (mixKey !== tintMix) {
+      tintMix = mixKey;
+      tints.forEach((el, j) => { el.style.opacity = j === i0 ? 1 : j === i1 ? q(t, 0.01).toFixed(2) : 0; });
     }
-    bar.style.transform = `scaleX(${(fT / Math.max(1, n - 1)).toFixed(4)})`;
+    const isPre = op < 0.5;
+    if (isPre !== pre) { pre = isPre; if (isPre) fs.setAttribute('data-pre', ''); else { fs.removeAttribute('data-pre'); if (meta) meta.content = C[idx].bg; } if (isPre && meta) meta.content = '#F3F3F1'; }
+    const hl = !isPre && C[idx].light;
+    if (hl !== hdrLight) { hdrLight = hl; root.classList.toggle('hdr-light', hl); }
+    const bt = `scaleX(${(fT / Math.max(1, n - 1)).toFixed(3)})`; if (bt !== bar._t) { bar.style.transform = bt; bar._t = bt; }
 
     // мягкая доводка до ближайшего проекта, когда скролл остановился
     if (!snapping && inPin && !touching && now - lastMove > 170) {
@@ -183,12 +187,6 @@ export function initFeatured() {
     }
     if (snapping && now - snapT > 1600) snapping = false;
 
-    // наклон к курсору
-    let tX = 0, tY = 0;
-    if (hov && hov.i === idx && fine && !reduce) {
-      const r = hov.el.getBoundingClientRect();
-      tX = clamp(((px - r.left) / r.width - 0.5) * 2, -1, 1); tY = clamp(((py - r.top) / r.height - 0.5) * 2, -1, 1);
-    }
 
     C.forEach((c) => {
       const d = c.i - fsm, ad = Math.abs(d), act = c.i === idx && hov === c ? 1 : 0;
@@ -201,8 +199,9 @@ export function initFeatured() {
       const X = S.cx + xOff(d) - S.W / 2, Y = S.cy - S.H / 2;
       const tr = `translate3d(${X.toFixed(2)}px,${Y.toFixed(2)}px,${z.toFixed(2)}px) rotateY(${ry.toFixed(3)}deg) rotateX(${rx.toFixed(3)}deg) scale(${s.toFixed(4)})`;
       if (tr !== c.tr) { c.el.style.transform = tr; c.tr = tr; }
-      const dim = (Math.min(ad, 1) * 0.5).toFixed(3) + '|' + ((1 - Math.min(ad, 1)) * 0.55 + c.lift * 0.3 - m * 0.25).toFixed(3);
-      if (dim !== c.dim) { const [a, b] = dim.split('|'); c.el.style.setProperty('--dim', a); c.el.style.setProperty('--shd', b); c.el.style.zIndex = String(10 - Math.round(ad * 2)); c.dim = dim; }
+      const dim = q(Math.min(ad, 1) * 0.5, 0.05).toFixed(2);
+      if (dim !== c.dim) { c.el.style.setProperty('--dim', dim); c.dim = dim; }
+      const zi = String(10 - Math.round(ad * 2)); if (zi !== c.z) { c.el.style.zIndex = zi; c.z = zi; }
 
       // изгиб: полосы раскладываются по дуге, длина дуги = ширине карточки
       const Bc = B * (1 - 0.35 * Math.min(ad, 1));
@@ -212,9 +211,6 @@ export function initFeatured() {
         if (Math.abs(Bc) > 1e-3) { const R = S.W / Bc; a = u * Bc; x = R * Math.sin(a); zz = -R * (1 - Math.cos(a)); }
         const t2 = `translate3d(${(x + S.W / 2 - S.sw / 2 - 0.8).toFixed(2)}px,0,${zz.toFixed(2)}px) rotateY(${a.toFixed(4)}rad)`;
         if (t2 !== o.tr) { o.el.style.transform = t2; o.tr = t2; }
-        const ph = a + ry * DEG;
-        const l = Math.round(236 + 8 * Math.cos(ph + 0.55) + 8 * (1 - Math.abs(Math.sin(ph)) * 0.6));
-        const sh = `rgb(${l},${l},${l - 2})`; if (sh !== o.sh) { o.el.style.setProperty('--sh', sh); o.sh = sh; }
       });
     });
     dirty = false;
