@@ -121,7 +121,7 @@ export function initHero(F, A, C) {
     lenis ? lenis.scrollTo(y, { duration: 1.6 }) : scrollTo({ top: y, behavior: 'smooth' });
   };
   $('#toProjects').addEventListener('click', goProjects);
-  document.querySelectorAll('#pill a:not([aria-current]), .ft a[data-go]').forEach((a) => a.addEventListener('click', goProjects));
+  document.querySelectorAll('#pill a:not([aria-current]), .foot a[data-go]').forEach((a) => a.addEventListener('click', goProjects));
 
   // кольцо можно крутить мышкой/пальцем: зажал и тянешь; отпустил — крутится дальше по инерции и плавно возвращается к своей скорости
   const D = { on: false, moved: false, x: 0, v: 0, t: 0, id: null };
