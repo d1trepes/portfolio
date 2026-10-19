@@ -23,9 +23,10 @@
 
 /* заголовок проекта: жирный капс сверху слева, курсив снизу справа — как на первом экране */
 .fs-t1,.fs-t2{position:relative;z-index:1;display:grid;pointer-events:none}
-.fs-t1{grid-row:2;font:800 clamp(46px,5.6vw,108px)/.9 var(--f-caps);text-transform:uppercase;letter-spacing:-.015em}
+.fs-t1{grid-row:2;margin-top:.16em;font:800 clamp(46px,5.6vw,108px)/.9 var(--f-caps);text-transform:uppercase;letter-spacing:-.015em}
 .fs-t2{grid-row:4;justify-items:end;text-align:right;font:400 italic clamp(44px,5.3vw,102px)/1 var(--f-serif);letter-spacing:-.03em}
-.ft{grid-area:1/1;display:block;overflow:hidden;padding:.06em .04em .1em;margin:-.06em -.04em -.1em}
+/* запас сверху и снизу, чтобы не срезались «й», «ё» и хвосты курсива */
+.ft{grid-area:1/1;display:block;overflow:hidden;padding:.24em .12em .2em;margin:-.24em -.12em -.2em}
 .ft > span{display:block;transition:transform 1.1s var(--smooth),opacity .6s var(--smooth)}
 .ft[data-s="next"] > span{transform:translateY(108%);opacity:0;transition-duration:.7s}
 .ft[data-s="prev"] > span{transform:translateY(-108%);opacity:0;transition-duration:.7s}

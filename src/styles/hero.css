@@ -89,3 +89,8 @@ h1{display:contents}
 .ring-tip{position:absolute;z-index:10;left:0;top:0;pointer-events:none;padding:8px 14px;border-radius:999px;font-size:13px;white-space:nowrap;color:#fff;
   background:rgba(17,17,17,.88);opacity:0;transform:translate3d(-999px,0,0);transition:opacity .3s var(--smooth)}
 .ring-tip.on{opacity:1}
+
+/* кольцо можно крутить: курсор-«рука» над панелями, при перетаскивании — сжатая рука */
+.hero{touch-action:pan-y}
+.scene--front .slice:not(.proj){pointer-events:auto;cursor:grab}
+.stage.dragging,.stage.dragging *{cursor:grabbing!important;user-select:none;-webkit-user-select:none}

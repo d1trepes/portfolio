@@ -50,7 +50,7 @@ export function initHero(F) {
       if (p.type === 'p') {
         s.addEventListener('pointerenter', () => { hoverP = p; p.slices.forEach((o) => o.el.classList.add('hot')); tip.classList.add('on'); });
         s.addEventListener('pointerleave', () => { if (hoverP === p) hoverP = null; p.slices.forEach((o) => o.el.classList.remove('hot')); tip.classList.remove('on'); });
-        s.addEventListener('click', () => { location.href = p.url; });
+        s.addEventListener('click', () => { if (D.moved) return; location.href = p.url; });
       }
       const o = { el: s, inner: s.querySelector('.in'), f: s.firstChild, b: s.lastChild, k, p, front: null, shade: '' };
       p.slices.push(o); slices.push(o);
@@ -113,6 +113,31 @@ export function initHero(F) {
   $('#toProjects').addEventListener('click', goProjects);
   document.querySelectorAll('#pill a:not([aria-current])').forEach((a) => a.addEventListener('click', goProjects));
 
+  // кольцо можно крутить мышкой/пальцем: зажал и тянешь; отпустил — крутится дальше по инерции и плавно возвращается к своей скорости
+  const D = { on: false, moved: false, x: 0, v: 0, t: 0, id: null };
+  hero.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || e.target.closest('a,button,.hdr')) return;
+    D.on = true; D.moved = false; D.x = e.clientX; D.t = performance.now(); D.v = 0; D.id = e.pointerId;
+  });
+  stage.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || !e.target.closest('.slice')) return;
+    D.on = true; D.moved = false; D.x = e.clientX; D.t = performance.now(); D.v = 0; D.id = e.pointerId;
+  });
+  addEventListener('pointermove', (e) => {
+    if (!D.on || e.pointerId !== D.id) return;
+    const dx = e.clientX - D.x, now = performance.now(), dt = Math.max(8, now - D.t) / 1000;
+    if (!D.moved && Math.abs(dx) < 5) return;
+    if (!D.moved) { D.moved = true; stage.classList.add('dragging'); getSelection()?.removeAllRanges(); hoverP = null; tip.classList.remove('on'); }
+    const da = dx / G.R; ang += da;
+    D.v = lerp(D.v, da / dt, .5); D.x = e.clientX; D.t = now; speed = 0;
+  }, { passive: true });
+  const endDrag = (e) => {
+    if (!D.on || (e && e.pointerId !== D.id)) return;
+    D.on = false; stage.classList.remove('dragging');
+    if (D.moved) { if (performance.now() - D.t > 90) D.v = 0; speed = clamp(D.v, -4, 4); setTimeout(() => (D.moved = false), 0); }
+  };
+  addEventListener('pointerup', endDrag); addEventListener('pointercancel', endDrag);
+
   let last = performance.now(), start = last, ang = .35, speed = 0, lastP = -1, lastClip = '', Ps = 0, heroOn = true;
   new IntersectionObserver(([en]) => { heroOn = en.isIntersecting; }).observe(hero);
   function frame(now) {
@@ -122,7 +147,7 @@ export function initHero(F) {
     const P = clamp(y / G.travel, 0, 1); Ps = reduce ? P : lerp(Ps, P, .18); if (Math.abs(Ps - P) < .002) Ps = P;
     const p = ease(Ps);
     const want = reduce ? 0 : (hoverP ? 0 : .11) * (1 - Ps);
-    speed = lerp(speed, want, .05); ang += speed * dt;
+    if (!D.on) { speed = lerp(speed, want, Math.abs(speed) > .3 ? .03 : .05); ang += speed * dt; }
 
     if ((p < 1 && (heroOn || p > 0)) || lastP !== p || dirty) {
       const tz = -6 * (1 - p), tx = -10 * (1 - p);
