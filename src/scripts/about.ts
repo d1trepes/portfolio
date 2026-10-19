@@ -87,7 +87,6 @@ export function initAbout(F) {
   const add = (el, prop, a, b, fn) => el && A.push({ el, prop, a, b, fn, v: '' });
   add(sec.querySelector('.ab-eyebrow'), '--p', 0.5, 0.72);
   sec.querySelectorAll('.ab-ln > span').forEach((el, i) => add(el, '--p', 0.5 + i * 0.06, 0.78 + i * 0.06));
-  add(sec.querySelector('.ab-ul'), '--p', 0.72, 0.98);
   sec.querySelectorAll('.ab-text .ab-up').forEach((el, i) => add(el, '--p', 0.66 + i * 0.04, 0.88 + i * 0.04));
   sec.querySelectorAll('#abFacts div').forEach((el, i) => {
     const b = el.querySelector('b');

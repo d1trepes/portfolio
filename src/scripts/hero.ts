@@ -35,6 +35,9 @@ export function initHero(F, A) {
   let hoverP = null;
   // подсказка у курсора над панелью-проектом
   const tip = document.createElement('div'); tip.className = 'ring-tip'; tip.textContent = 'Открыть кейс'; stage.appendChild(tip);
+  // панель могла уйти за голову прямо под курсором — тогда браузер не сообщает «курсор ушёл», снимаем подсветку сами
+  const unhover = () => { if (hoverP) { hoverP.slices.forEach((o) => o.el.classList.remove('hot')); hoverP = null; } tip.classList.remove('on'); };
+  addEventListener('pointermove', (e) => { if (tip.classList.contains('on') && !e.target.closest('.scene--front .slice.proj')) unhover(); }, { passive: true });
   addEventListener('pointermove', (e) => { if (!tip.classList.contains('on')) return; const r = stage.getBoundingClientRect(); tip.style.transform = `translate3d(${e.clientX - r.left + 16}px,${e.clientY - r.top + 18}px,0)`; }, { passive: true });
   const slices = [];
   PANELS.forEach((p) => {
@@ -146,7 +149,7 @@ export function initHero(F, A) {
   let last = performance.now(), start = last, ang = .35, speed = 0, lastP = -1, lastClip = '', Ps = 0, heroOn = true;
   new IntersectionObserver(([en]) => { heroOn = en.isIntersecting; }).observe(hero);
   // линза начинает свой проезд по лицу, когда уехал загрузочный экран
-  if (document.documentElement.classList.contains('is-loading')) addEventListener('loaderdone', () => { start = performance.now(); }, { once: true });
+  if (document.documentElement.classList.contains('is-loading')) { start = 1e12; addEventListener('loaderdone', () => { start = performance.now(); }, { once: true }); }
   function frame(now) {
     if (lenis) lenis.raf(now);
     const dt = Math.min(50, now - last) / 1000; last = now;
@@ -176,7 +179,7 @@ export function initHero(F, A) {
           const l = p > 0 ? 251 : Math.round((236 + 8 * Math.cos(ph + .55) + 8 * (1 - Math.abs(Math.sin(ph)) * .6)) / 3) * 3;
           const sh = `rgb(${l},${l},${l - 2})`; if (sh !== o.shade) { o.el.style.setProperty('--sh', sh); o.shade = sh; }
           const a = Math.round((proj ? (pn.off ? clamp(1 - (p - .12) / .3, 0, 1) : 1 - land) : decoA) * 10) / 10; if (a !== o.a) { o.f.style.opacity = o.b.style.opacity = a; o.el.style.visibility = a > 0 ? 'visible' : 'hidden'; o.a = a; }
-          if (front !== o.front) { (front ? rigF : rigB).appendChild(o.el); o.front = front; }
+          if (front !== o.front) { (front ? rigF : rigB).appendChild(o.el); o.front = front; if (!front && hoverP === pn) unhover(); }
         });
       });
       const lq = Math.round(land * 10) / 10;
