@@ -47,7 +47,8 @@ export function initAbout(F) {
     } else {
       let ph = sr.height * 0.9, pw = ph * 1086 / 1018;
       const maxW = G.vw * (G.vw > 1800 ? 0.54 : 0.5); if (pw > maxW) { pw = maxW; ph = pw * 1018 / 1086; }
-      G.w = pw; G.h = ph; G.x = G.vw * 0.3 - pw * HX; // голова слева, лицом к тексту G.y = sr.height - ph + sr.height * 0.06; // чуть ниже, чтобы волосы не упирались в шапку (низ всё равно растворяется)
+      G.w = pw; G.h = ph; G.x = G.vw * 0.3 - pw * HX; // голова слева, лицом к тексту
+      G.y = sr.height - ph; // низ фото у низа блока и растворяется, как на первом экране
       tilt.style.left = G.x + 'px'; tilt.style.top = G.y + 'px'; tilt.style.width = pw + 'px'; tilt.style.height = ph + 'px';
     }
     G.R = G.mobile ? 58 : clamp(G.w * 0.095, 62, 90);
