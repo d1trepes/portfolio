@@ -1,0 +1,48 @@
+/* ---------- футер (тёмный, продолжает «Связь») ---------- */
+.ft{--dk:#111110;--lt:#F3F3F1;--mute:rgba(243,243,241,.48);position:relative;z-index:8;background:var(--dk);color:var(--lt);overflow:clip;
+  padding-bottom:env(safe-area-inset-bottom,0px)}
+.ft::before{content:"";position:absolute;left:max(24px,env(safe-area-inset-left,0px));right:max(24px,env(safe-area-inset-right,0px));top:0;height:1px;background:rgba(243,243,241,.12)}
+@media (min-width:900px){.ft::before{left:40px;right:40px}}
+
+.ft-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:40px;padding-top:clamp(48px,8svh,88px)}
+.ft-name{margin:0;font:800 clamp(22px,1.8vw,30px)/1 var(--f-caps);text-transform:uppercase;letter-spacing:-.01em}
+.ft-sub{margin:14px 0 0;font-size:14px;line-height:1.55;color:var(--mute)}
+.ft-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.ft-col{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.ft-h{margin:0 0 10px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+/* ссылка: при наведении линия прорисовывается слева направо, уходит вправо */
+.ft-a{position:relative;padding:3px 0;border:0;background:none;font:500 clamp(15px,1.05vw,17px)/1.35 var(--f-sans);color:var(--lt);text-decoration:none;cursor:pointer;text-align:left}
+.ft-a span{background-image:linear-gradient(currentColor,currentColor);background-size:0 1px;background-repeat:no-repeat;background-position:100% 100%;transition:background-size .5s var(--smooth)}
+.ft-a:hover span,.ft-a:focus-visible span{background-size:100% 1px;background-position:0 100%}
+.ft-clock{margin:10px 0 0;font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
+
+.ft-mid{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-top:clamp(40px,8svh,96px)}
+.ft-copy{margin:0;font-size:13px;line-height:1.5;color:var(--lt)}
+.ft-copy span{color:var(--mute)}
+
+/* огромная строка: ширину подгоняет contact.ts */
+.ft-bigwrap{padding-top:clamp(12px,2svh,24px);padding-bottom:clamp(10px,1.6vw,24px)}
+.ft-big{margin:0;display:flex;align-items:center;justify-content:space-between;gap:.1em;white-space:nowrap;font-size:120px;line-height:1}
+.ft-big b{font:800 1em/.86 var(--f-caps);text-transform:uppercase;letter-spacing:-.03em;padding-top:.06em}
+.ft-it{font:400 italic .9em/1 var(--f-serif);letter-spacing:-.035em;color:rgba(243,243,241,.86);padding:0 .06em .08em 0}
+
+/* окно с картинкой: раскрывается от центра по скроллу (--o), кадр внутри чуть едет */
+.ft-win{--o:0;position:relative;flex:none;display:block;width:2.7em;height:.74em;border-radius:.09em;overflow:hidden;background:#1C1C1B;
+  clip-path:inset(0 calc((1 - var(--o)) * 50%) round .09em);cursor:none}
+.ft-win-in,.ft-win-in img,.ft-lines{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ft-win-in{will-change:transform}
+.ft-win-in img{object-fit:cover}
+/* под линзой — тот же кадр линиями, как голова на первом экране */
+.ft-lines{background:#ECEAE4;clip-path:circle(0 at 0 0)}
+.ft-lines::after{content:"";position:absolute;inset:0;background:#2a2a28;-webkit-mask:url(/footer/eye-lines.webp) center/cover no-repeat;mask:url(/footer/eye-lines.webp) center/cover no-repeat}
+.ft-ring{position:absolute;left:0;top:0;width:calc(var(--lr,0px) * 2);height:calc(var(--lr,0px) * 2);border-radius:50%;pointer-events:none;
+  transform:translate(calc(var(--lx,0px) - var(--lr,0px)),calc(var(--ly,0px) - var(--lr,0px)));box-shadow:0 0 0 1px rgba(255,255,255,.9),0 0 0 2px rgba(17,17,17,.16)}
+
+.ft-up{opacity:var(--p,0);transform:translateY(calc((1 - var(--p,0)) * 20px))}
+
+@media (max-width:899px){
+  .ft-top{grid-template-columns:1fr;gap:36px}
+  .ft-cols{grid-template-columns:1fr 1fr;row-gap:32px}
+  .ft-mid{align-items:center}
+  .ft-win{cursor:auto}
+}

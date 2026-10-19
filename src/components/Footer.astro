@@ -1,0 +1,66 @@
+---
+// Футер: продолжает тёмный финал после «Связи».
+// Сверху — колонки (имя, навигация, соцсети, контакты), снизу — огромная строка во всю ширину:
+// «ВНИКАЮ [окно с картинкой] с головой». Окно раскрывается по скроллу, над ним — линза, как на первом экране.
+// Ссылки на соцсети и почта — временные.
+import '../styles/footer.css';
+import { TG_ME, TG_LINK, EMAIL } from '../data/ring';
+
+const nav = [
+  { t: 'Главная', h: '/', top: true },
+  { t: 'Проекты', h: '/#featured' },
+  { t: 'Обо мне', h: '/#about' },
+  { t: 'Связь', h: '/#contact' },
+];
+const social = [
+  { t: 'Telegram', h: TG_ME, tg: true },
+  { t: 'Behance', h: '#' },
+  { t: 'Dribbble', h: '#' },
+  { t: 'Instagram', h: '#' },
+];
+const year = new Date().getFullYear();
+---
+<footer class="ft" id="ft">
+  <div class="ft-top gutter">
+    <div class="ft-brand ft-up">
+      <p class="ft-name">Иван Засадыч</p>
+      <p class="ft-sub">Веб-дизайнер из&nbsp;Беларуси.<br />Сайты под ключ&nbsp;— от&nbsp;разбора до&nbsp;запуска.</p>
+    </div>
+
+    <div class="ft-cols">
+      <nav class="ft-col ft-up" aria-label="Разделы">
+        <p class="ft-h">Разделы</p>
+        {nav.map((l) => <a class="ft-a" href={l.h} data-top={l.top ? '' : undefined} data-go={!l.top ? l.h.slice(1) : undefined}><span>{l.t}</span></a>)}
+      </nav>
+      <div class="ft-col ft-up">
+        <p class="ft-h">Соцсети</p>
+        {social.map((l) => <a class="ft-a" href={l.h} data-tg-me={l.tg ? '' : undefined} target={l.tg ? undefined : '_blank'} rel="noopener"><span>{l.t}</span></a>)}
+      </div>
+      <div class="ft-col ft-up">
+        <p class="ft-h">Контакты</p>
+        <button class="ft-a" type="button" data-mail={EMAIL}><span>{EMAIL}</span></button>
+        <a class="ft-a" href={TG_LINK} data-tg><span>Бот: цены и&nbsp;сроки</span></a>
+        <p class="ft-clock">Минск · <span data-clock>--:--</span></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="ft-mid gutter">
+    <p class="ft-copy ft-up">© {year} Иван Засадыч<br /><span>Сделано с&nbsp;головой, без конструкторов</span></p>
+    <a class="btn btn--dark btn--sm ft-up" href="#" data-top>Наверх</a>
+  </div>
+
+  <div class="ft-bigwrap gutter" aria-hidden="true">
+    <p class="ft-big" id="ftBig">
+      <b>Вникаю</b>
+      <span class="ft-win" id="ftWin">
+        <span class="ft-win-in" id="ftWinIn">
+          <img src="/footer/eye.webp" alt="" width="1680" height="684" loading="lazy" decoding="async" />
+          <span class="ft-lines" id="ftLines"></span>
+        </span>
+        <i class="ft-ring"></i>
+      </span>
+      <i class="ft-it">с&nbsp;головой</i>
+    </p>
+  </div>
+</footer>

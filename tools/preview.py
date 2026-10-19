@@ -30,7 +30,7 @@ def inline_css(css):
         block = re.sub(r'src:[^;}]+', f'src:url({b64(dist(w2.group(1)), "font/woff2")}) format("woff2")', block)
         return block
     css = re.sub(r'@font-face\{[^}]*\}', face, css)
-    css = re.sub(r'url\((/hero/[^)]+\.webp)\)', lambda m: f'url({b64(dist(m.group(1)), "image/webp")})', css)
+    css = re.sub(r'url\((/(?:hero|footer)/[^)]+\.webp)\)', lambda m: f'url({b64(dist(m.group(1)), "image/webp")})', css)
     return css
 
 
@@ -48,6 +48,8 @@ html = re.sub(r'<script type="module" src="([^"]+)"></script>',
 # картинки (в html и в скриптах)
 for name in ('portrait', 'mesh', 'sil', 'sild'):
     html = html.replace(f'/hero/{name}.webp', b64(dist(f'hero/{name}.webp'), 'image/webp'))
+for name in ('eye', 'eye-lines'):
+    html = html.replace(f'/footer/{name}.webp', b64(dist(f'footer/{name}.webp'), 'image/webp'))
 
 # кейсы → всплывающие экраны
 cases = []
@@ -62,7 +64,7 @@ case_css = [c for c in case_css if 'case-stub' in c]
 html = html.replace('</body>', '<style>.case-pop{display:none;position:fixed;inset:0;z-index:90;background:var(--bg);overflow:auto}.case-pop:target{display:block}'
                     + ''.join(case_css) + '</style>' + ''.join(cases) + '</body>')
 
-html = html.replace('href="/#featured"', 'href="#featured"').replace('href="/"', 'href="#"')
+html = html.replace('href="/#featured"', 'href="#featured"').replace('href="/#about"', 'href="#about"').replace('href="/#contact"', 'href="#contact"').replace('href="/"', 'href="#"')
 html = re.sub(r'<title>.*?</title>', '<title>Сайт Ивана Засадыча</title>', html, count=1)
 
 os.makedirs(OUT, exist_ok=True)

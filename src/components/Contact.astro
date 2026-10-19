@@ -1,0 +1,72 @@
+---
+// Блок 4 «Связь»: тёмный финал страницы. Белый блок «Обо мне» снизу заканчивается дугой,
+// которая при прокрутке выпрямляется и открывает тёмный слой (по мотивам dennissnellenberg.com).
+// Форма — одна фраза с полями внутри; круглая белая кнопка «Отправить» тянется за курсором.
+// Тексты временные, финальные пишем на этапе текстов.
+import '../styles/contact.css';
+import { TG_LINK, TG_ME, EMAIL } from '../data/ring';
+
+const kinds = ['лендинг', 'многостраничный', 'B2B', 'пока не знаю'];
+---
+<section class="ct" id="contact" aria-labelledby="ctTitle">
+  <div class="ct-arc" id="ctArc" aria-hidden="true"></div>
+
+  <div class="ct-in gutter" id="ctIn">
+    <p class="ct-eyebrow ct-up">Связь</p>
+    <h2 id="ctTitle">
+      <span class="ct-l1"><span class="ct-ln"><span>Есть задача?</span></span></span>
+      <span class="ct-l2"><span class="ct-ln"><span>давайте обсудим</span></span></span>
+    </h2>
+
+    <form class="ct-form" id="ctForm" novalidate>
+      <div class="ct-fields" id="ctFields">
+        <p class="ct-phrase ct-up">
+          <span class="ct-w">Привет! Меня зовут</span>
+          <label class="ct-f" data-v="ваше имя" data-key="name">
+            <span class="sr">Имя</span>
+            <input size="1" name="name" autocomplete="name" placeholder="ваше имя" enterkeyhint="next" maxlength="60" required />
+          </label><span class="ct-w">, нужен сайт:</span>
+          <span class="ct-kinds" role="radiogroup" aria-label="Какой сайт нужен">
+            {kinds.map((k) => (
+              <label class="ct-kind ct-up"><input type="radio" name="kind" value={k} /><span>{k}</span></label>
+            ))}
+          </span>
+          <span class="ct-w">— для</span>
+          <label class="ct-f ct-f--task" data-v="завода с картой дилеров" data-key="task">
+            <span class="sr">Коротко о задаче</span>
+            <input size="1" name="task" autocomplete="off" placeholder="" enterkeyhint="next" maxlength="300" />
+          </label><span class="ct-w">. Связаться со&nbsp;мной:</span>
+          <label class="ct-f ct-f--contact" data-v="@ник, телефон или почта" data-key="contact">
+            <span class="sr">Telegram, телефон или почта</span>
+            <input size="1" name="contact" autocomplete="on" inputmode="text" placeholder="@ник, телефон или почта" enterkeyhint="send" maxlength="120" required />
+            <em class="ct-type" id="ctType" aria-live="polite"></em>
+          </label>
+        </p>
+        <!-- ловушка для спам-ботов: человек это поле не видит и не заполняет -->
+        <input class="ct-hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+        <div class="ct-row">
+          <i class="ct-rule" aria-hidden="true"></i>
+          <p class="ct-msg" id="ctMsg" aria-live="polite"></p>
+          <div class="ct-mag" id="ctMag">
+            <button class="btn btn--round" type="submit" id="ctSend"><span class="ct-sl">Отправить</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ct-done" id="ctDone" aria-live="polite" hidden>
+        <p class="ct-done-t"><b>Получил,</b> <i>уже читаю</i></p>
+        <p class="ct-done-s">Заявка у&nbsp;меня в&nbsp;Telegram. Отвечу в&nbsp;течение 24&nbsp;часов&nbsp;— обычно быстрее.</p>
+        <button class="ct-again" type="button" id="ctAgain">Отправить ещё одну</button>
+      </div>
+    </form>
+
+    <div class="ct-quick">
+      <span class="ct-or ct-up">или быстрее:</span>
+      <a class="btn btn--dark ct-up" href={TG_ME} data-tg-me>Написать в Telegram</a>
+      <a class="btn btn--dark ct-up" href={TG_LINK} data-tg>Спросить бота</a>
+      <button class="btn btn--dark ct-up" type="button" id="ctMail" data-mail={EMAIL}>Скопировать почту</button>
+      <p class="ct-time ct-up" id="ctTime">Минск</p>
+    </div>
+  </div>
+</section>

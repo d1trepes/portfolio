@@ -3,7 +3,7 @@
 import Lenis from 'lenis';
 import { panelHTML } from './panel';
 
-export function initHero(F, A) {
+export function initHero(F, A, C) {
   const PANELS = JSON.parse(document.getElementById('panels-data').textContent);
   const N = 8, TAU = Math.PI * 2, SPAN = 40 * Math.PI / 180, dA = SPAN / N, FRONT = .3;
   const HEAD = { x: .62, top: .098 }; // центр головы по горизонтали — доля ширины фото
@@ -91,6 +91,7 @@ export function initHero(F, A) {
     // панели-проекты приземляются в карточки слайдера «Избранные проекты»
     F.measure(stage);
     A && A.measure();
+    C && C.measure();
     PANELS.forEach((p) => { if (!p.slot) return; const r = F.slot(p.id); p.fx = r.x; p.fy = r.y; p.fw = r.w; p.fh = r.h; p.off = r.off; });
     G.travel = Math.max(300, F.docTop());
     dirty = true;
@@ -115,11 +116,12 @@ export function initHero(F, A) {
   F.lenis = lenis;
   const goProjects = (e) => {
     e.preventDefault();
-    const y = e.currentTarget.hash === '#about' && A ? A.top() : F.docTop(); // «Обо мне» — к своему блоку, остальное пока к проектам
+    const h = e.currentTarget.hash;
+    const y = h === '#about' && A ? A.top() : h === '#contact' && C ? C.top() : F.docTop(); // каждый пункт — к своему блоку
     lenis ? lenis.scrollTo(y, { duration: 1.6 }) : scrollTo({ top: y, behavior: 'smooth' });
   };
   $('#toProjects').addEventListener('click', goProjects);
-  document.querySelectorAll('#pill a:not([aria-current])').forEach((a) => a.addEventListener('click', goProjects));
+  document.querySelectorAll('#pill a:not([aria-current]), .ft a[data-go]').forEach((a) => a.addEventListener('click', goProjects));
 
   // кольцо можно крутить мышкой/пальцем: зажал и тянешь; отпустил — крутится дальше по инерции и плавно возвращается к своей скорости
   const D = { on: false, moved: false, x: 0, v: 0, t: 0, id: null };
@@ -208,6 +210,7 @@ export function initHero(F, A) {
     }
     F.frame(now, dt);
     A && A.frame(now, dt);
+    C && C.frame(now, dt);
     requestAnimationFrame(frame);
   }
   measure(); addEventListener('resize', measure);

@@ -57,6 +57,8 @@ featured.forEach((p, i) => {
   import { initHero } from '../scripts/hero';
   import { initFeatured } from '../scripts/featured';
   import { initAbout } from '../scripts/about';
+  import { initContact } from '../scripts/contact';
   const F = initFeatured();
-  initHero(F, initAbout(F));
+  const A = initAbout(F);
+  initHero(F, A, initContact(F));
 </script>
