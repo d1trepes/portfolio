@@ -8,7 +8,6 @@ export function initAbout(F) {
   const sec = $('#about');
   if (!sec) return { frame() {}, measure() {}, top: () => 0 };
   const tilt = $('#abTilt'), photo = $('#abPhoto'), layer = $('#abLayer'), lens = $('#abLens'), ring = $('#abRing');
-  const nums = [...document.querySelectorAll('#abFacts b')];
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
   const lerp = (a, b, t) => a + (b - a) * t, clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -91,9 +90,20 @@ export function initAbout(F) {
   sec.querySelectorAll('#abFacts div').forEach((el, i) => {
     const b = el.querySelector('b');
     add(el, '--ln', 0.58 + i * 0.03, 0.8 + i * 0.03);
-    add(el, '--nb', 0.64 + i * 0.03, 0.9 + i * 0.03, (p) => { const v = Math.round(+b.dataset.n * p) + b.dataset.suf; if (b.textContent !== v) b.textContent = v; });
+    add(el, '--nb', 0.64 + i * 0.03, 0.9 + i * 0.03);
     add(el, '--cp', 0.66 + i * 0.03, 0.9 + i * 0.03);
   });
+  // цифры бегут сами (~1,1 с, лесенкой), как только факты показались; вернулись в слайдер — сбрасываем для следующего раза
+  const nums = [...sec.querySelectorAll('#abFacts b')];
+  let countT = -1;
+  const setNums = (f) => nums.forEach((b, i) => { const v = Math.round(+b.dataset.n * f(i)) + b.dataset.suf; if (b.textContent !== v) b.textContent = v; });
+  setNums(() => 0);
+  function counts(now, k, landed) {
+    if (countT < 0 && (k > 0.72 || landed)) countT = now;
+    if (countT >= 0 && k < 0.3 && !landed) { countT = -1; setNums(() => 0); return; }
+    if (countT < 0) return;
+    setNums((i) => (reduce ? 1 : out3(clamp((now - countT - i * 120) / 1100, 0, 1))));
+  }
   function reveal(k, landed) {
     for (const o of A) {
       const p = landed || reduce ? 1 : out3(clamp((k - o.a) / (o.b - o.a), 0, 1));
@@ -158,6 +168,7 @@ export function initAbout(F) {
       } else { sec.classList.remove('on-head'); onState = false; }
     }
     reveal(k, landed);
+    counts(now, k, landed);
     const near = top < G.vh && top > -G.secH;
     if (!near && L.r < 0.5) return;
 

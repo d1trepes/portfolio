@@ -211,6 +211,7 @@ export function initHero(F, A) {
     requestAnimationFrame(frame);
   }
   measure(); addEventListener('resize', measure);
+  (window as any).__heroReady = true; // загрузочный экран откроет квадрат только когда первый экран расставлен
   document.fonts && document.fonts.ready.then(measure);
   requestAnimationFrame(frame);
 }
