@@ -1,0 +1,32 @@
+---
+import '../styles/header.css';
+import { TG_LINK } from '../data/ring';
+---
+<header class="hdr gutter" id="hdr">
+  <a class="logo" href="/" aria-label="Иван Засадыч, на главную">Иван Засадыч</a>
+  <nav class="pill" id="pill" aria-label="Основная навигация">
+    <span class="ind" id="ind"></span>
+    <a href="/" aria-current="page">Главная</a><a href="#featured">Проекты</a><a href="#featured">Как работаю</a><a href="#featured">Услуги</a><a href="#featured">Контакты</a>
+  </nav>
+  <div class="hdr-r"><a class="btn btn--sm" href={TG_LINK} data-tg>Написать</a></div>
+</header>
+
+<script>
+  const pill = document.getElementById('pill')!;
+  const ind = document.getElementById('ind')!;
+  const hdr = document.getElementById('hdr')!;
+  const active = pill.querySelector<HTMLElement>('[aria-current]')!;
+  const moveInd = (a: HTMLElement) => {
+    ind.style.width = a.offsetWidth + 'px';
+    ind.style.transform = `translateX(${a.offsetLeft}px)`;
+  };
+  pill.querySelectorAll<HTMLElement>('a').forEach((a) => a.addEventListener('pointerenter', () => moveInd(a)));
+  pill.addEventListener('pointerleave', () => moveInd(active));
+  const place = () => moveInd(active);
+  place();
+  addEventListener('resize', place);
+  document.fonts?.ready.then(place);
+  const onScroll = () => hdr.classList.toggle('scrolled', scrollY > 8);
+  addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+</script>

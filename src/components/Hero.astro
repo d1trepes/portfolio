@@ -1,0 +1,67 @@
+---
+import '../styles/hero.css';
+import { getCollection } from 'astro:content';
+import { ringNotes, TG_LINK } from '../data/ring';
+import { panelHTML, type Panel } from '../scripts/panel';
+
+const featured = (await getCollection('projects', (p) => p.data.featured))
+  .sort((a, b) => a.data.order - b.data.order)
+  .slice(0, 3);
+
+// Кольцо: проект, текст, проект, текст…
+const panels: Panel[] = [];
+featured.forEach((p, i) => {
+  panels.push({ type: 'p', id: p.id, title: p.data.title, tag: p.data.tag, c: p.data.palette, map: p.data.map });
+  if (ringNotes[i]) panels.push({ type: 't', ...ringNotes[i] });
+});
+---
+<div class="stage" id="stage">
+  <section class="hero" id="hero">
+    <div class="copy gutter">
+      <p class="eyebrow">Веб-дизайнер из Беларуси</p>
+      <h1><span class="l1">Делаю<br />сайты,</span><span class="l2">вникая<br />с&nbsp;головой</span></h1>
+      <div class="side--l">
+        <p class="lead">Сначала разбираюсь в&nbsp;задаче и&nbsp;бизнесе, потом рисую и&nbsp;довожу сайт до&nbsp;запуска.</p>
+        <div class="cta"><a class="btn" href={TG_LINK} data-tg>Написать в Telegram</a></div>
+      </div>
+      <div class="side--r"><a class="btn btn--light" href="#featured" id="toProjects">Смотреть проекты</a></div>
+    </div>
+
+    <div class="services gutter" aria-label="Что я делаю">
+      <div><small>Делаю</small>Лендинги</div>
+      <div><small>Делаю</small>Многостраничные сайты</div>
+      <div><small>Делаю</small>B2B-сайты</div>
+      <div><small>Работаю</small>Под ключ, удалённо</div>
+    </div>
+
+    <div class="photo" id="photo">
+      <img src="/hero/portrait.webp" alt="Чёрно-белый портрет: Иван смотрит вверх" width="1086" height="1018" fetchpriority="high" decoding="async" />
+      <div class="layer" id="layer"><div class="fill"></div><div class="lines"></div></div>
+    </div>
+    <div class="lens" id="lens" aria-hidden="true"><div class="ring" id="ring"></div><div class="dot"></div></div>
+    <div class="hint" id="hint" aria-hidden="true">Наведите курсор на голову</div>
+  </section>
+
+  <div class="scene scene--back" id="sceneBack"><div class="rig" id="rigBack"></div></div>
+  <div class="scene scene--front" id="sceneFront"><div class="rig" id="rigFront"></div></div>
+
+  <section class="featured gutter" id="featured">
+    <div class="featured-head">
+      <h2>Избранные <i>проекты</i></h2>
+      <p>Три лучших коммерческих проекта. Пока заглушки: настоящие обложки добавим позже.</p>
+    </div>
+    <div class="col" id="col">
+      {panels.filter((p) => p.type === 'p').map((p) => (
+        <a class="fcard" href="#" data-id={p.type === 'p' ? p.id : ''} aria-label={p.title} set:html={panelHTML(p)} />
+      ))}
+    </div>
+  </section>
+  <p class="after gutter">Оформление этого блока обсудим отдельно.</p>
+</div>
+
+<script type="application/json" id="panels-data" set:html={JSON.stringify(panels)} />
+
+<script>
+  import { initHero } from '../scripts/hero';
+  initHero();
+</script>
