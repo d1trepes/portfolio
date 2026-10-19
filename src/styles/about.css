@@ -17,25 +17,17 @@
 .ab-text p{margin:0 0 10px;text-wrap:pretty}
 .ab-cta{margin-top:20px}
 
-/* ---- мини-анимации (только сдвиг и прозрачность — не нагружают). Запускаются, когда блок приехал (класс .in) ---- */
+/* ---- мини-анимации привязаны к скроллу: about.ts считает прогресс каждого элемента (--p от 0 до 1),
+   пока карточка летит в круг. Когда блок встал — всё уже на месте. Двигаются только сдвиг и прозрачность ---- */
 /* 1. строки заголовка выезжают снизу из-под «шторки»; запас — чтобы не срезались «й» и хвосты курсива */
 .ab-ln{display:block;overflow:hidden;padding:.24em .12em .2em;margin:-.24em -.12em -.2em}
-.ab-ln > span{display:block;transform:translateY(110%);transition:transform 1.1s var(--smooth)}
-.about.in .ab-ln > span{transform:none}
-.about.in .ab-l1 .ab-ln:nth-child(1) > span{transition-delay:.05s}
-.about.in .ab-l1 .ab-ln:nth-child(2) > span{transition-delay:.15s}
-.about.in .ab-l2 .ab-ln > span{transition-delay:.3s}
+.ab-ln > span{display:block;transform:translateY(calc((1 - var(--p,0)) * 110%))}
 /* 2. под курсивом рисуется тонкая линия — как линии лица в линзе */
 .ab-ul{display:block;width:100%;height:.16em;margin-top:-.04em;overflow:visible}
-.ab-ul path{fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;
-  stroke-dasharray:1;stroke-dashoffset:1;opacity:0;transition:stroke-dashoffset 1.4s var(--smooth),opacity .2s}
-.about.in .ab-ul path{stroke-dashoffset:0;opacity:1;transition-delay:.75s}
-/* 3. подпись, абзацы и кнопка проявляются снизу по очереди */
-.ab-up{opacity:0;transform:translateY(24px);transition:opacity .9s var(--smooth),transform 1.1s var(--smooth)}
-.about.in .ab-up{opacity:1;transform:none}
-.about.in .ab-text p:nth-child(1){transition-delay:.45s}
-.about.in .ab-text p:nth-child(2){transition-delay:.56s}
-.about.in .ab-cta{transition-delay:.7s}
+.ab-ul path{fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:calc(1 - var(--p,0));opacity:min(1,calc(var(--p,0) * 20))}
+/* 3. подпись, абзацы и кнопка проявляются снизу */
+.ab-up{opacity:var(--p,0);transform:translateY(calc((1 - var(--p,0)) * 24px))}
+.ab-eyebrow{opacity:var(--p,0);transform:translateY(calc((1 - var(--p,0)) * 14px))}
 
 /* голова: обёртка слегка наклоняется за курсором; внутри — отражённое фото (поднимается снизу при переходе) и линза */
 .ab-tilt{position:absolute;z-index:3;left:0;top:0;width:10px;height:10px;pointer-events:none;will-change:transform}
@@ -44,19 +36,14 @@
 .ab-photo img,.ab-photo .layer,.ab-photo .layer > *{position:absolute;inset:0;width:100%;height:100%;display:block}
 .ab-lens{z-index:4}
 
-/* 4. факты в самом низу: прорисовывается линия → цифра досчитывает (about.ts) → проявляется подпись; лесенкой */
+/* 4. факты в самом низу: прорисовывается линия (--ln) → цифра досчитывает (--nb, about.ts) → проявляется подпись (--cp); лесенкой */
 .ab-facts{position:relative;z-index:6;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;padding-bottom:26px}
-.ab-facts div{position:relative;padding-top:12px;--d:0s}
-.ab-facts div:nth-child(2){--d:.14s}.ab-facts div:nth-child(3){--d:.28s}.ab-facts div:nth-child(4){--d:.42s}
+.ab-facts div{position:relative;padding-top:12px}
 .ab-facts div:nth-child(n+3){text-align:right}
-.ab-facts div::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:rgba(17,17,17,.14);transform:scaleX(0);transform-origin:0 50%;
-  transition:transform 1.1s var(--smooth)}
+.ab-facts div::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:rgba(17,17,17,.14);transform:scaleX(var(--ln,0));transform-origin:0 50%}
 .ab-facts div:nth-child(n+3)::before{transform-origin:100% 50%}
-.ab-facts b{display:block;font:800 clamp(30px,2.7vw,46px)/1 var(--f-caps);letter-spacing:-.02em;font-variant-numeric:tabular-nums;opacity:0;transition:opacity .6s var(--smooth)}
-.ab-facts span{display:block;margin-top:6px;font-size:13px;color:var(--muted);opacity:0;transform:translateY(8px);transition:opacity .8s var(--smooth),transform 1s var(--smooth)}
-.about.in .ab-facts div::before{transform:none;transition-delay:calc(.5s + var(--d))}
-.about.in .ab-facts b{opacity:1;transition-delay:calc(.68s + var(--d))}
-.about.in .ab-facts span{opacity:1;transform:none;transition-delay:calc(1s + var(--d))}
+.ab-facts b{display:block;font:800 clamp(30px,2.7vw,46px)/1 var(--f-caps);letter-spacing:-.02em;font-variant-numeric:tabular-nums;opacity:min(1,calc(var(--nb,0) * 4))}
+.ab-facts span{display:block;margin-top:6px;font-size:13px;color:var(--muted);opacity:var(--cp,0);transform:translateY(calc((1 - var(--cp,0)) * 8px))}
 
 /* переход из слайдера: последняя карточка сжимается в круг и садится на лицо линзой */
 .ab-blob{position:fixed;z-index:60;left:0;top:0;pointer-events:none;overflow:hidden;visibility:hidden;contain:layout paint;

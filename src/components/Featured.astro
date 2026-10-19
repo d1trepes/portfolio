@@ -40,7 +40,7 @@ const pad = (i: number) => String(i).padStart(2, '0');
     <div class="fs-zone" id="fsZone"></div>
 
     <div class="fs-t2 gutter" aria-hidden="true">
-      {items.map((it, i) => <span class="ft" data-i={i} data-s={i === 0 ? 'cur' : 'next'} style={`--pi:${ink(it.bg)}`}><span>{it.h[1]}</span></span>)}
+      {items.map((it, i) => <span class="ft" data-i={i} data-s={i === 0 ? 'cur' : 'next'} style={`--pi:${ink(it.bg)}`}><span>{it.h[1]}<svg class="ful" viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true"><path d="M3 9 C 48 3, 92 12, 140 7 S 236 2, 297 8" pathLength="1" /></svg></span></span>)}
     </div>
 
     <div class="fs-cards" id="fsCards">

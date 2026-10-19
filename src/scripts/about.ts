@@ -80,33 +80,33 @@ export function initAbout(F) {
   sec.addEventListener('touchstart', touch, { passive: true });
   sec.addEventListener('touchmove', touch, { passive: true });
 
-  // ---------- появление и цифры ----------
-  // всё запускается, когда блок полностью приехал (а не пока он выезжает из-под слайдера)
-  let shown = false, countT = -1;
-  function show(now) { if (shown) return; shown = true; sec.classList.add('in'); countT = now; }
-  // ушли обратно в слайдер — сбрасываем, чтобы при следующем приезде анимации проиграли снова
-  function reset() {
-    if (!shown) return; shown = false; countT = -1; sec.classList.remove('in');
-    nums.forEach((b) => (b.textContent = '0' + b.dataset.suf));
+  // ---------- мини-анимации по скроллу ----------
+  // у каждого элемента своё окно внутри перехода (k от 0 до 1): [начало, конец]. К приезду блока (k = 1) всё на месте.
+  const out3 = (t) => 1 - Math.pow(1 - t, 3);
+  const A = [];
+  const add = (el, prop, a, b, fn) => el && A.push({ el, prop, a, b, fn, v: '' });
+  add(sec.querySelector('.ab-eyebrow'), '--p', 0.5, 0.72);
+  sec.querySelectorAll('.ab-ln > span').forEach((el, i) => add(el, '--p', 0.5 + i * 0.06, 0.78 + i * 0.06));
+  add(sec.querySelector('.ab-ul'), '--p', 0.72, 0.98);
+  sec.querySelectorAll('.ab-text .ab-up').forEach((el, i) => add(el, '--p', 0.66 + i * 0.04, 0.88 + i * 0.04));
+  sec.querySelectorAll('#abFacts div').forEach((el, i) => {
+    const b = el.querySelector('b');
+    add(el, '--ln', 0.58 + i * 0.03, 0.8 + i * 0.03);
+    add(el, '--nb', 0.64 + i * 0.03, 0.9 + i * 0.03, (p) => { const v = Math.round(+b.dataset.n * p) + b.dataset.suf; if (b.textContent !== v) b.textContent = v; });
+    add(el, '--cp', 0.66 + i * 0.03, 0.9 + i * 0.03);
+  });
+  function reveal(k, landed) {
+    for (const o of A) {
+      const p = landed || reduce ? 1 : out3(clamp((k - o.a) / (o.b - o.a), 0, 1));
+      const v = p.toFixed(3);
+      if (v !== o.v) { o.v = v; o.el.style.setProperty(o.prop, v); o.fn && o.fn(p); }
+    }
   }
-  // цифры досчитывают лесенкой — после того, как над каждой прорисовалась линия (задержки как в about.css)
-  function counts(now) {
-    if (countT < 0) return;
-    let done = true;
-    nums.forEach((b, i) => {
-      const t = reduce ? 1 : clamp((now - countT - 700 - i * 140) / 1300, 0, 1), e = 1 - Math.pow(1 - t, 3);
-      if (t < 1) done = false;
-      const v = Math.round(+b.dataset.n * e) + b.dataset.suf; if (b.textContent !== v) b.textContent = v;
-    });
-    if (done) countT = -1;
-  }
-  nums.forEach((b) => (b.textContent = '0' + b.dataset.suf));
 
   // ---------- кадр ----------
   let arrived = false, lastClip = '', tiltKey = '', ry = 0, rx = 0, riseKey = '', lastY = -1, lastMove = 0, dir = 0, snapT = 0;
   function frame(now) {
     const y = scrollY;
-    counts(now);
     if (!X) return;
     const span = Math.max(1, G.top - X.end);
     const k = clamp((y - X.end) / span, 0, 1);
@@ -149,7 +149,6 @@ export function initAbout(F) {
 
     // блок «приехал»: линза живёт, пока он на экране
     const nowArrived = landed && top > -G.secH * 0.6;
-    if (k < 0.35 && top > G.vh * 0.5) reset();
     if (nowArrived !== arrived) {
       arrived = nowArrived;
       if (arrived) {
@@ -157,9 +156,9 @@ export function initAbout(F) {
         if (!L.user) { L.x = L.tx = G.w * P0.x; L.y = L.ty = G.h * P0.y; L.t0 = now; }
         if (wasBlob) L.r = G.R; // «капля» уже стала кольцом нужного размера
         L.show = 1;
-        show(now);
       } else { sec.classList.remove('on-head'); onState = false; }
     }
+    reveal(k, landed);
     const near = top < G.vh && top > -G.secH;
     if (!near && L.r < 0.5) return;
 

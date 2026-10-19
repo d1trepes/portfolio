@@ -145,6 +145,8 @@ export function initHero(F, A) {
 
   let last = performance.now(), start = last, ang = .35, speed = 0, lastP = -1, lastClip = '', Ps = 0, heroOn = true;
   new IntersectionObserver(([en]) => { heroOn = en.isIntersecting; }).observe(hero);
+  // линза начинает свой проезд по лицу, когда уехал загрузочный экран
+  if (document.documentElement.classList.contains('is-loading')) addEventListener('loaderdone', () => { start = performance.now(); }, { once: true });
   function frame(now) {
     if (lenis) lenis.raf(now);
     const dt = Math.min(50, now - last) / 1000; last = now;

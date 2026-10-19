@@ -1,0 +1,74 @@
+---
+// Загрузочный экран: светлый фон, имя, счётчик 0→100, курсив и тонкая линия прогресса.
+// Стили и скрипт встроены прямо в страницу (is:inline) — экран виден с первой миллисекунды, ещё до загрузки остального.
+// Когда сайт загрузился (и прошло не меньше ~1,3 с), текст уезжает вверх, а сам экран поднимается шторкой — и стартует первый экран.
+---
+<div class="ld" id="ld" aria-hidden="true">
+  <div class="ld-top"><span class="ld-name">Иван Засадыч</span><span class="ld-sub">Веб-дизайн · Беларусь</span></div>
+  <div class="ld-bot">
+    <div class="ld-n"><span id="ldN">0</span></div>
+    <div class="ld-it"><span>вникаю с&nbsp;головой</span></div>
+  </div>
+  <div class="ld-bar"><i id="ldBar"></i></div>
+</div>
+
+<style is:inline>
+  html.is-loading,html.is-loading body{overflow:hidden}
+  .ld{position:fixed;z-index:1000;inset:0;background:#F3F3F1;color:#111;will-change:transform;
+    transition:transform 1s cubic-bezier(.76,0,.24,1)}
+  .ld-top{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:center;height:70px;
+    padding:env(safe-area-inset-top,0px) max(24px,env(safe-area-inset-right,0px)) 0 max(24px,env(safe-area-inset-left,0px));font-size:14px}
+  .ld-name{font-weight:600;font-size:17px;letter-spacing:-.02em}
+  .ld-sub{color:#6B6B67}
+  .ld-bot{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;
+    padding:0 max(24px,env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) max(24px,env(safe-area-inset-left,0px))}
+  .ld-n,.ld-it{overflow:hidden;padding:.12em .1em .1em;margin:-.12em -.1em -.1em}
+  .ld-n span{display:block;font:800 clamp(96px,17vw,280px)/.8 "Inter Tight","Onest","Arial Black",sans-serif;letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+  .ld-it span{display:block;font:400 italic clamp(28px,3.4vw,56px)/1 "Noto Serif Display",Georgia,serif;letter-spacing:-.03em;padding-bottom:.08em}
+  .ld-n span,.ld-it span,.ld-top > *{transition:transform .7s cubic-bezier(.76,0,.24,1),opacity .5s}
+  .ld-bar{position:absolute;left:0;right:0;bottom:0;height:2px;background:rgba(17,17,17,.08)}
+  .ld-bar i{position:absolute;inset:0;background:#111;transform-origin:0 50%;transform:scaleX(0);will-change:transform}
+  .ld.out .ld-n span,.ld.out .ld-it span{transform:translateY(-105%)}
+  .ld.out .ld-top > *{transform:translateY(-12px);opacity:0}
+  .ld.out .ld-bar{opacity:0;transition:opacity .4s}
+  .ld.up{transform:translateY(-100%)}
+  @media (min-width:900px){.ld-top,.ld-bot{padding-left:max(40px,env(safe-area-inset-left,0px));padding-right:max(40px,env(safe-area-inset-right,0px))}}
+  @media (max-width:899px){.ld-sub{display:none}.ld-bot{flex-direction:column;align-items:flex-start}.ld-n span{font-size:30vw}}
+  @media (prefers-reduced-motion:reduce){.ld{transition:opacity .4s}.ld.up{transform:none;opacity:0}}
+</style>
+
+<script is:inline>
+  (function () {
+    var html = document.documentElement, ld = document.getElementById('ld'), num = document.getElementById('ldN'), bar = document.getElementById('ldBar');
+    html.classList.add('is-loading');
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    scrollTo(0, 0);
+    var t0 = performance.now(), loaded = false, shown = 0, done = false, MIN = 1300, MAX = 6000;
+    addEventListener('load', function () { loaded = true; });
+    function tick(now) {
+      var el = now - t0, ready = (loaded || el > MAX) && el > MIN;
+      // пока грузится — ползём до 88, загрузилось — добегаем до 100
+      var target = ready ? 100 : Math.min(88, 88 * (1 - Math.exp(-el / 900)));
+      shown += (target - shown) * (ready ? 0.14 : 0.08);
+      if (ready && shown > 99.4) shown = 100;
+      var v = Math.round(shown);
+      if (num.textContent !== String(v)) num.textContent = v;
+      bar.style.transform = 'scaleX(' + (shown / 100).toFixed(3) + ')';
+      if (shown >= 100 && !done) { done = true; finish(); return; }
+      requestAnimationFrame(tick);
+    }
+    function finish() {
+      setTimeout(function () {
+        ld.classList.add('out');                       // текст уезжает вверх
+        setTimeout(function () {
+          ld.classList.add('up');                      // экран поднимается шторкой
+          html.classList.remove('is-loading');         // стартуют анимации первого экрана
+          scrollTo(0, 0);
+          dispatchEvent(new Event('loaderdone'));
+          setTimeout(function () { ld.remove(); }, 1100);
+        }, 420);
+      }, 160);
+    }
+    requestAnimationFrame(tick);
+  })();
+</script>
