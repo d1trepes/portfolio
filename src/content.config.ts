@@ -14,6 +14,10 @@ const projects = defineCollection({
     // Временная обложка из плашек, пока нет настоящих: [фон, акцент, блок]
     palette: z.tuple([z.string(), z.string(), z.string()]),
     map: z.boolean().default(false),
+    // Блок «Избранные проекты»:
+    bg: z.string().default('#D9D9D5'),            // цвет фона под этот проект
+    heading: z.tuple([z.string(), z.string()]).optional(), // [жирная часть капсом, курсивная часть]
+    summary: z.string().default(''),              // одна-две строки под заголовком
   }),
 });
 

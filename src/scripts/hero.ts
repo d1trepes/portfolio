@@ -3,7 +3,7 @@
 import Lenis from 'lenis';
 import { panelHTML } from './panel';
 
-export function initHero() {
+export function initHero(F) {
   const PANELS = JSON.parse(document.getElementById('panels-data').textContent);
   const N = 10, TAU = Math.PI * 2, SPAN = 40 * Math.PI / 180, dA = SPAN / N, FRONT = .3;
   const HEAD = { x: .62, top: .098 }; // центр головы по горизонтали — доля ширины фото
@@ -40,8 +40,8 @@ export function initHero() {
   PANELS.forEach((p) => {
     p.slices = [];
     if (p.type === 'p') {
-      p.slot = document.querySelector(`.fcard[data-id="${p.id}"]`);
-      p.url = p.slot.getAttribute('href');
+      p.slot = F.slot(p.id).el;
+      p.url = F.slot(p.id).url;
     }
     for (let k = 0; k < N; k++) {
       const s = document.createElement('div');
@@ -85,8 +85,10 @@ export function initHero() {
       o.el.style.width = (G.sw + 1.6) + 'px'; o.el.style.height = G.H + 'px'; o.el.style.setProperty('--rad', G.rad + 'px');
       o.inner.style.width = G.W + 'px'; o.inner.style.height = G.H + 'px'; o.inner.style.left = (-o.k * G.sw) + 'px';
     });
-    PANELS.forEach((p) => { if (!p.slot) return; const r = p.slot.getBoundingClientRect(); p.fx = r.left + ox; p.fy = r.top + oy; p.fw = r.width; p.fh = r.height; });
-    G.travel = Math.max(300, (PANELS[0].fy - G.hy) - innerHeight * .3);
+    // панели-проекты приземляются в карточки слайдера «Избранные проекты»
+    F.measure(stage);
+    PANELS.forEach((p) => { if (!p.slot) return; const r = F.slot(p.id); p.fx = r.x; p.fy = r.y; p.fw = r.w; p.fh = r.h; p.off = r.off; });
+    G.travel = Math.max(300, F.docTop());
     dirty = true;
   }
 
@@ -106,7 +108,8 @@ export function initHero() {
 
   let lenis = null;
   if (!reduce) { try { lenis = new Lenis({ lerp: .085, smoothWheel: true }); } catch (e) { lenis = null; } }
-  const goProjects = (e) => { e.preventDefault(); const y = featured.getBoundingClientRect().top + scrollY - 40; lenis ? lenis.scrollTo(y, { duration: 1.6 }) : scrollTo({ top: y, behavior: 'smooth' }); };
+  F.lenis = lenis;
+  const goProjects = (e) => { e.preventDefault(); const y = F.docTop(); lenis ? lenis.scrollTo(y, { duration: 1.6 }) : scrollTo({ top: y, behavior: 'smooth' }); };
   $('#toProjects').addEventListener('click', goProjects);
   document.querySelectorAll('#pill a:not([aria-current])').forEach((a) => a.addEventListener('click', goProjects));
 
@@ -139,7 +142,7 @@ export function initHero() {
           o.el.style.transform = `translate3d(${(X - G.sw / 2).toFixed(2)}px,${(Y - G.H / 2).toFixed(2)}px,${Z.toFixed(2)}px) rotateY(${ph.toFixed(4)}rad) scale(${S.toFixed(4)})`;
           const l = Math.round(236 + 8 * Math.cos(ph + .55) + 8 * (1 - Math.abs(Math.sin(ph)) * .6));
           const sh = `rgb(${l},${l},${l - 2})`; if (sh !== o.shade) { o.el.style.setProperty('--sh', sh); o.shade = sh; }
-          const a = proj ? 1 - land : decoA; if (a !== o.a) { o.f.style.opacity = o.b.style.opacity = a; o.el.style.visibility = a > 0 ? 'visible' : 'hidden'; o.a = a; }
+          const a = proj ? (pn.off ? clamp(1 - (p - .12) / .3, 0, 1) : 1 - land) : decoA; if (a !== o.a) { o.f.style.opacity = o.b.style.opacity = a; o.el.style.visibility = a > 0 ? 'visible' : 'hidden'; o.a = a; }
           if (front !== o.front) { (front ? rigF : rigB).appendChild(o.el); o.front = front; }
         });
       });
@@ -166,6 +169,7 @@ export function initHero() {
         hint.style.transform = `translate3d(${(L.x + G.lensR + 14).toFixed(1)}px,${(L.y - 16).toFixed(1)}px,0)`;
       }
     }
+    F.frame(now, dt);
     requestAnimationFrame(frame);
   }
   measure(); addEventListener('resize', measure);

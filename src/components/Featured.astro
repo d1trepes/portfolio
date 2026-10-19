@@ -1,0 +1,69 @@
+---
+// Блок 2 «Избранные проекты»: закреплённый 3D-слайдер.
+// Скролл листает проекты, карточка в центре, соседние по бокам, фон перекрашивается под проект.
+import '../styles/featured.css';
+import { getCollection } from 'astro:content';
+import { panelHTML } from '../scripts/panel';
+
+const items = (await getCollection('projects', (p) => p.data.featured))
+  .sort((a, b) => a.data.order - b.data.order)
+  .slice(0, 3)
+  .map((p) => ({
+    id: p.id,
+    url: `/projects/${p.id}/`,
+    title: p.data.title,
+    tag: p.data.tag,
+    bg: p.data.bg,
+    h: p.data.heading ?? [p.data.title, ''],
+    summary: p.data.summary,
+    html: panelHTML({ type: 'p', id: p.id, title: p.data.title, tag: p.data.tag, c: p.data.palette, map: p.data.map }),
+  }));
+const n = items.length;
+const pad = (i: number) => String(i).padStart(2, '0');
+---
+<div class="tint" id="tint" aria-hidden="true"></div>
+
+<section class="featured" id="featured" style={`--n:${n}`} aria-label="Избранные проекты">
+  <div class="fs" id="fs">
+    <div class="fs-top gutter">
+      <p class="fs-label">Избранные проекты</p>
+      <p class="fs-count" aria-live="polite"><span class="fs-num" id="fsNum">01</span><span class="fs-of">/ {pad(n)}</span></p>
+    </div>
+
+    <div class="fs-t1 gutter" aria-hidden="true">
+      {items.map((it, i) => <span class="ft" data-i={i} data-s={i === 0 ? 'cur' : 'next'}><span>{it.h[0]}</span></span>)}
+    </div>
+
+    <div class="fs-zone" id="fsZone"></div>
+
+    <div class="fs-t2 gutter" aria-hidden="true">
+      {items.map((it, i) => <span class="ft" data-i={i} data-s={i === 0 ? 'cur' : 'next'}><span>{it.h[1]}</span></span>)}
+    </div>
+
+    <div class="fs-cards" id="fsCards">
+      {items.map((it, i) => (
+        <a class="card" href={it.url} data-id={it.id} data-i={i} data-bg={it.bg} aria-label={`Открыть кейс: ${it.title}`}>
+          <div class="card-rig"><div class="card-flat" set:html={it.html} /></div>
+        </a>
+      ))}
+    </div>
+
+    <div class="fs-bottom gutter">
+      <div class="fs-info">
+        {items.map((it, i) => (
+          <div class="fi" data-i={i} data-s={i === 0 ? 'cur' : 'next'}>
+            <small>{it.tag}</small>
+            <p>{it.summary}</p>
+          </div>
+        ))}
+      </div>
+      <div class="fs-cta"><a class="btn" id="fsOpen" href={items[0].url}>Открыть кейс</a></div>
+    </div>
+
+    <nav class="fs-dots" id="fsDots" aria-label="Проекты">
+      {items.map((it, i) => <button type="button" data-i={i} aria-label={`${i + 1}. ${it.title}`} aria-current={i === 0 ? 'true' : undefined}><i></i></button>)}
+    </nav>
+
+    <div class="fs-hint" id="fsHint" aria-hidden="true"><span>Листайте</span><b><i id="fsBar"></i></b></div>
+  </div>
+</section>

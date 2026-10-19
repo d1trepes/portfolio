@@ -2,7 +2,8 @@
 import '../styles/hero.css';
 import { getCollection } from 'astro:content';
 import { ringNotes, TG_LINK } from '../data/ring';
-import { panelHTML, type Panel } from '../scripts/panel';
+import { type Panel } from '../scripts/panel';
+import Featured from './Featured.astro';
 
 const featured = (await getCollection('projects', (p) => p.data.featured))
   .sort((a, b) => a.data.order - b.data.order)
@@ -45,23 +46,13 @@ featured.forEach((p, i) => {
   <div class="scene scene--back" id="sceneBack"><div class="rig" id="rigBack"></div></div>
   <div class="scene scene--front" id="sceneFront"><div class="rig" id="rigFront"></div></div>
 
-  <section class="featured gutter" id="featured">
-    <div class="featured-head">
-      <h2>Избранные <i>проекты</i></h2>
-      <p>Три лучших коммерческих проекта. Пока заглушки: настоящие обложки добавим позже.</p>
-    </div>
-    <div class="col" id="col">
-      {panels.filter((p) => p.type === 'p').map((p) => (
-        <a class="fcard" href={`/projects/${p.type === 'p' ? p.id : ''}/`} data-id={p.type === 'p' ? p.id : ''} aria-label={p.title} set:html={panelHTML(p)} />
-      ))}
-    </div>
-  </section>
-  <p class="after gutter">Оформление этого блока обсудим отдельно.</p>
+  <Featured />
 </div>
 
 <script type="application/json" id="panels-data" set:html={JSON.stringify(panels)} />
 
 <script>
   import { initHero } from '../scripts/hero';
-  initHero();
+  import { initFeatured } from '../scripts/featured';
+  initHero(initFeatured());
 </script>
