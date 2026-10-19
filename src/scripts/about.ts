@@ -7,7 +7,7 @@ export function initAbout(F) {
   const $ = (s) => document.querySelector(s);
   const sec = $('#about');
   if (!sec) return { frame() {}, measure() {}, top: () => 0 };
-  const tilt = $('#abTilt'), layer = $('#abLayer'), lens = $('#abLens'), ring = $('#abRing');
+  const tilt = $('#abTilt'), photo = $('#abPhoto'), layer = $('#abLayer'), lens = $('#abLens'), ring = $('#abRing');
   const nums = [...document.querySelectorAll('#abFacts b')];
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -47,7 +47,7 @@ export function initAbout(F) {
     } else {
       let ph = sr.height * 0.9, pw = ph * 1086 / 1018;
       const maxW = G.vw * (G.vw > 1800 ? 0.54 : 0.5); if (pw > maxW) { pw = maxW; ph = pw * 1018 / 1086; }
-      G.w = pw; G.h = ph; G.x = G.vw * 0.3 - pw * HX; // голова слева, лицом к тексту
+      G.w = pw; G.h = ph; G.x = G.vw * 0.26 - pw * HX; // голова слева, лицом к тексту
       G.y = sr.height - ph; // низ фото у низа блока и растворяется, как на первом экране
       tilt.style.left = G.x + 'px'; tilt.style.top = G.y + 'px'; tilt.style.width = pw + 'px'; tilt.style.height = ph + 'px';
     }
@@ -81,21 +81,24 @@ export function initAbout(F) {
   sec.addEventListener('touchmove', touch, { passive: true });
 
   // ---------- появление и цифры ----------
+  // всё запускается, когда блок полностью приехал (а не пока он выезжает из-под слайдера)
   let shown = false, countT = -1;
-  new IntersectionObserver(([en]) => {
-    if (en.isIntersecting && !shown) { shown = true; sec.classList.add('in'); countT = 0; }
-  }, { threshold: 0.3 }).observe(sec);
+  function show(now) { if (shown) return; shown = true; sec.classList.add('in'); countT = now; }
+  // цифры досчитывают лесенкой — после того, как над каждой прорисовалась линия (задержки как в about.css)
   function counts(now) {
     if (countT < 0) return;
-    if (countT === 0) countT = now;
-    const t = reduce ? 1 : clamp((now - countT - 250) / 1400, 0, 1), e = 1 - Math.pow(1 - t, 3);
-    nums.forEach((b) => { const v = Math.round(+b.dataset.n * e) + b.dataset.suf; if (b.textContent !== v) b.textContent = v; });
-    if (t >= 1) countT = -1;
+    let done = true;
+    nums.forEach((b, i) => {
+      const t = reduce ? 1 : clamp((now - countT - 700 - i * 140) / 1300, 0, 1), e = 1 - Math.pow(1 - t, 3);
+      if (t < 1) done = false;
+      const v = Math.round(+b.dataset.n * e) + b.dataset.suf; if (b.textContent !== v) b.textContent = v;
+    });
+    if (done) countT = -1;
   }
   nums.forEach((b) => (b.textContent = '0' + b.dataset.suf));
 
   // ---------- кадр ----------
-  let arrived = false, lastClip = '', tiltKey = '', ry = 0, rx = 0;
+  let arrived = false, lastClip = '', tiltKey = '', ry = 0, rx = 0, riseKey = '', lastY = -1, lastMove = 0, dir = 0, snapT = 0;
   function frame(now) {
     const y = scrollY;
     counts(now);
@@ -103,6 +106,19 @@ export function initAbout(F) {
     const span = Math.max(1, G.top - X.end);
     const k = clamp((y - X.end) / span, 0, 1);
     const top = G.top - y; // верх блока на экране
+    if (y !== lastY) { dir = y > lastY ? 1 : -1; lastY = y; lastMove = now; }
+
+    // голова поднимается снизу и проявляется, пока «капля» летит к лицу
+    const rise = reduce ? 1 : ease(clamp((k - 0.2) / 0.65, 0, 1));
+    const rk = rise.toFixed(3);
+    if (rk !== riseKey) { riseKey = rk; photo.style.transform = `translate3d(0,${((1 - rise) * 70).toFixed(1)}px,0) scaleX(-1)`; photo.style.opacity = rk; }
+
+    // остановились посреди перехода — мягко доводим: дальше в блок или назад к слайдеру
+    const lenis = F.lenis;
+    if (lenis && !reduce && k > 0.02 && k < 0.985 && now - lastMove > 200 && now - snapT > 1300) {
+      snapT = now;
+      lenis.scrollTo(k > 0.5 || dir > 0 && k > 0.3 ? G.top : X.end, { duration: 1.1, easing: (t) => 1 - Math.pow(1 - t, 4) });
+    }
 
     // переход: карточка → круг → линза
     const blobWant = !reduce && k > 0 && k < 0.999, wasBlob = blobOn;
@@ -133,6 +149,7 @@ export function initAbout(F) {
         if (!L.user) { L.x = L.tx = G.w * P0.x; L.y = L.ty = G.h * P0.y; L.t0 = now; }
         if (wasBlob) L.r = G.R; // «капля» уже стала кольцом нужного размера
         L.show = 1;
+        show(now);
       } else { sec.classList.remove('on-head'); onState = false; }
     }
     const near = top < G.vh && top > -G.secH;
