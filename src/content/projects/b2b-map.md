@@ -3,8 +3,6 @@ title: B2B-сайт с интерактивной картой
 tag: Проект 1 · B2B
 order: 1
 featured: true
-kind: b2b
-year: '2025'
 palette: ['#E3E6EA', '#1B1E22', '#C9CFD6']
 map: true
 # Тексты и цвет временные — заменим вместе с настоящими обложками

@@ -2,12 +2,10 @@
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 
-interface Props { title?: string; description?: string; page?: 'home' | 'projects'; preloadHero?: boolean }
+interface Props { title?: string; description?: string }
 const {
   title = 'Иван Засадыч — веб-дизайнер',
   description = 'Делаю сайты, вникая с головой: лендинги, многостраничные и B2B-сайты под ключ.',
-  page = 'home',
-  preloadHero = page === 'home',
 } = Astro.props;
 ---
 <!doctype html>
@@ -21,11 +19,11 @@ const {
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta name="theme-color" content="#F3F3F1" />
-    {preloadHero && <link rel="preload" as="image" href="/hero/portrait.webp" fetchpriority="high" />}
+    <link rel="preload" as="image" href="/hero/portrait.webp" fetchpriority="high" />
     <slot name="head" />
   </head>
   <body>
-    <Header page={page} />
+    <Header />
     <slot />
     <div class="toast" id="toast" role="status"></div>
   </body>

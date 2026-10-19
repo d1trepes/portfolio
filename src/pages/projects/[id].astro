@@ -9,7 +9,7 @@ export async function getStaticPaths() {
 const { project } = Astro.props;
 ---
 <!-- Временная страница: шаблон кейса сделаем на этапе «Кейсы». -->
-<Base title={`${project.data.title} — Иван Засадыч`} page="projects">
+<Base title={`${project.data.title} — Иван Засадыч`}>
   <main class="case-stub gutter">
     <p class="case-stub__tag">{project.data.tag}</p>
     <h1>{project.data.title}</h1>

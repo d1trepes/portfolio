@@ -3,8 +3,6 @@ title: Лендинг
 tag: Проект 3 · Лендинг
 order: 3
 featured: true
-kind: landing
-year: '2026'
 palette: ['#E8E6E1', '#141414', '#CFCBC3']
 # Тексты и цвет временные — заменим вместе с настоящими обложками
 bg: '#7A4A3B'
