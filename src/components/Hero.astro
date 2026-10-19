@@ -52,7 +52,7 @@ featured.forEach((p, i) => {
     </div>
     <div class="col" id="col">
       {panels.filter((p) => p.type === 'p').map((p) => (
-        <a class="fcard" href="#" data-id={p.type === 'p' ? p.id : ''} aria-label={p.title} set:html={panelHTML(p)} />
+        <a class="fcard" href={`/projects/${p.type === 'p' ? p.id : ''}/`} data-id={p.type === 'p' ? p.id : ''} aria-label={p.title} set:html={panelHTML(p)} />
       ))}
     </div>
   </section>

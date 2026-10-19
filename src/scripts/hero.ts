@@ -32,22 +32,25 @@ export function initHero() {
     return silData[(Math.floor(py / G.photo.h * SH) * SW + Math.floor(px / G.photo.w * SW)) * 4 + 3] > 90;
   }
 
-  let hoverP = false;
+  let hoverP = null;
+  // подсказка у курсора над панелью-проектом
+  const tip = document.createElement('div'); tip.className = 'ring-tip'; tip.textContent = 'Открыть кейс'; stage.appendChild(tip);
+  addEventListener('pointermove', (e) => { if (!tip.classList.contains('on')) return; const r = stage.getBoundingClientRect(); tip.style.transform = `translate3d(${e.clientX - r.left + 16}px,${e.clientY - r.top + 18}px,0)`; }, { passive: true });
   const slices = [];
   PANELS.forEach((p) => {
     p.slices = [];
     if (p.type === 'p') {
       p.slot = document.querySelector(`.fcard[data-id="${p.id}"]`);
-      p.slot.addEventListener('click', (e) => { e.preventDefault(); say('Здесь откроется кейс «' + p.title + '»'); });
+      p.url = p.slot.getAttribute('href');
     }
     for (let k = 0; k < N; k++) {
       const s = document.createElement('div');
       s.className = 'slice' + (k === 0 ? ' first' : '') + (k === N - 1 ? ' last' : '') + (p.type === 'p' ? ' proj' : '');
       s.innerHTML = `<div class="f"><div class="in">${panelHTML(p)}</div></div><div class="b"></div>`;
       if (p.type === 'p') {
-        s.addEventListener('pointerenter', () => hoverP = true);
-        s.addEventListener('pointerleave', () => hoverP = false);
-        s.addEventListener('click', () => say('Здесь откроется кейс «' + p.title + '»'));
+        s.addEventListener('pointerenter', () => { hoverP = p; p.slices.forEach((o) => o.el.classList.add('hot')); tip.classList.add('on'); });
+        s.addEventListener('pointerleave', () => { if (hoverP === p) hoverP = null; p.slices.forEach((o) => o.el.classList.remove('hot')); tip.classList.remove('on'); });
+        s.addEventListener('click', () => { location.href = p.url; });
       }
       const o = { el: s, inner: s.querySelector('.in'), f: s.firstChild, b: s.lastChild, k, p, front: null, shade: '' };
       p.slices.push(o); slices.push(o);
@@ -125,9 +128,10 @@ export function initHero() {
       PANELS.forEach((pn, i) => {
         const base = wrap(ang + i * TAU / PANELS.length), proj = pn.type === 'p', s = proj ? pn.fw / G.W : 1;
         const panelFront = Math.cos(base) > FRONT;
+        pn.lift = lerp(pn.lift || 0, hoverP === pn ? 1 : 0, .12); if (Math.abs(pn.lift - (hoverP === pn ? 1 : 0)) < .001) pn.lift = hoverP === pn ? 1 : 0;
         pn.slices.forEach((o) => {
           const off = (o.k - (N - 1) / 2) * dA, phR = base + off;
-          let X = G.R * Math.sin(phR), Y = 0, Z = G.R * Math.cos(phR), ph = phR, S = 1, front = panelFront;
+          const R = G.R * (1 + .05 * pn.lift); let X = R * Math.sin(phR), Y = 0, Z = R * Math.cos(phR), ph = phR, S = 1, front = panelFront;
           if (proj && p > 0) {
             const fxC = pn.fx + (o.k + .5) * G.sw * s - G.cx, fyC = pn.fy + pn.fh / 2 - G.cy;
             X = lerp(X, fxC, p); Y = lerp(0, fyC, p); Z = lerp(Z, 0, p); ph = lerp(phR, 0, p); S = lerp(1, s, p); front = panelFront || p > .45;

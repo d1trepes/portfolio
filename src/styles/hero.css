@@ -93,3 +93,12 @@ h1{display:contents}
 .fcard:hover{transform:translateY(-4px)}
 .fcard::before{content:"";display:block;padding-top:calc(100% / 1.83)}
 .after{padding-block:0 120px;text-align:center;color:var(--soft);font-size:14px}
+
+/* панели-проекты кликабельны: текстовый слой пропускает клики сквозь пустые места */
+.copy,.services{pointer-events:none}
+.copy > *,.copy h1 > span{pointer-events:auto}
+.scene--front .slice.proj .f{transition:filter .4s var(--smooth)}
+.scene--front .slice.proj.hot .f{filter:brightness(1.03) contrast(1.04)}
+.ring-tip{position:absolute;z-index:8;left:0;top:0;pointer-events:none;padding:8px 14px;border-radius:999px;font-size:13px;white-space:nowrap;color:#fff;
+  background:rgba(17,17,17,.88);opacity:0;transform:translate3d(-999px,0,0);transition:opacity .3s var(--smooth)}
+.ring-tip.on{opacity:1}
