@@ -84,6 +84,11 @@ export function initAbout(F) {
   // всё запускается, когда блок полностью приехал (а не пока он выезжает из-под слайдера)
   let shown = false, countT = -1;
   function show(now) { if (shown) return; shown = true; sec.classList.add('in'); countT = now; }
+  // ушли обратно в слайдер — сбрасываем, чтобы при следующем приезде анимации проиграли снова
+  function reset() {
+    if (!shown) return; shown = false; countT = -1; sec.classList.remove('in');
+    nums.forEach((b) => (b.textContent = '0' + b.dataset.suf));
+  }
   // цифры досчитывают лесенкой — после того, как над каждой прорисовалась линия (задержки как в about.css)
   function counts(now) {
     if (countT < 0) return;
@@ -107,6 +112,8 @@ export function initAbout(F) {
     const k = clamp((y - X.end) / span, 0, 1);
     const top = G.top - y; // верх блока на экране
     if (y !== lastY) { dir = y > lastY ? 1 : -1; lastY = y; lastMove = now; }
+    // «приехал» — с запасом: при масштабе экрана в Windows прокрутка может не дойти до конца на долю пикселя
+    const landed = k >= 0.985 || top <= 2;
 
     // голова поднимается снизу и проявляется, пока «капля» летит к лицу
     const rise = reduce ? 1 : ease(clamp((k - 0.2) / 0.65, 0, 1));
@@ -115,13 +122,13 @@ export function initAbout(F) {
 
     // остановились посреди перехода — мягко доводим: дальше в блок или назад к слайдеру
     const lenis = F.lenis;
-    if (lenis && !reduce && k > 0.02 && k < 0.985 && now - lastMove > 200 && now - snapT > 1300) {
+    if (lenis && !reduce && k > 0.02 && !landed && now - lastMove > 200 && now - snapT > 1300) {
       snapT = now;
       lenis.scrollTo(k > 0.5 || dir > 0 && k > 0.3 ? G.top : X.end, { duration: 1.1, easing: (t) => 1 - Math.pow(1 - t, 4) });
     }
 
     // переход: карточка → круг → линза
-    const blobWant = !reduce && k > 0 && k < 0.999, wasBlob = blobOn;
+    const blobWant = !reduce && k > 0 && !landed, wasBlob = blobOn;
     if (blobWant) {
       const es = ease(clamp(k * 1.2, 0, 1)), e = ease(k);
       const sx = X.x, sy = X.y - (y - X.end); // карточка уезжает вверх вместе со слайдером
@@ -141,7 +148,8 @@ export function initAbout(F) {
     }
 
     // блок «приехал»: линза живёт, пока он на экране
-    const nowArrived = k >= 0.999 && top > -G.secH * 0.6;
+    const nowArrived = landed && top > -G.secH * 0.6;
+    if (k < 0.35 && top > G.vh * 0.5) reset();
     if (nowArrived !== arrived) {
       arrived = nowArrived;
       if (arrived) {
