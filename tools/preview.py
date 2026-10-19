@@ -61,7 +61,15 @@ for pid in sorted(os.listdir(dist('projects'))):
     html = html.replace(f'href="/projects/{pid}/"', f'href="#case-{pid}"')
 case_css = re.findall(r'<style>(.*?)</style>', open(dist(f'projects/{pid}/index.html'), encoding='utf-8').read(), re.S)
 case_css = [c for c in case_css if 'case-stub' in c]
-html = html.replace('</body>', '<style>.case-pop{display:none;position:fixed;inset:0;z-index:90;background:var(--bg);overflow:auto}.case-pop:target{display:block}'
+# политика → тоже всплывающий экран
+pp = open(dist('privacy/index.html'), encoding='utf-8').read()
+pmain = re.search(r'<main.*?</main>', pp, re.S).group(0).replace('href="/#contact"', 'href="#contact"')
+case_css += [c for c in re.findall(r'<style>(.*?)</style>', pp, re.S) if '.lg{' in c]
+cases.append(f'<div class="case-pop" id="privacy-pop">{pmain}</div>')
+html = html.replace('href="/privacy/" target="_blank"', 'href="#privacy-pop"').replace('href="/privacy/"', 'href="#privacy-pop"')
+# оглавление внутри всплывающей политики: прокручиваем внутри окна, а не меняем адрес (иначе окно закроется)
+cases.append('<script>document.querySelectorAll("#privacy-pop .lg-toc a").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();document.querySelector(a.getAttribute("href")).scrollIntoView({behavior:"smooth"})}))</script>')
+html = html.replace('</body>', '<style>.case-pop{display:none;position:fixed;inset:0;z-index:90;background:var(--bg);overflow:auto;border-radius:0!important;outline:0!important}.case-pop:target{display:block}'
                     + ''.join(case_css) + '</style>' + ''.join(cases) + '</body>')
 
 html = html.replace('href="/#featured"', 'href="#featured"').replace('href="/#about"', 'href="#about"').replace('href="/#contact"', 'href="#contact"').replace('href="/"', 'href="#"')

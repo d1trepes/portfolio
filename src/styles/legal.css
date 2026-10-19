@@ -1,0 +1,28 @@
+/* ---------- страница политики: тот же язык — капс + курсив, тонкие линии, номера ---------- */
+.lg{max-width:1520px;margin:0 auto;padding-top:clamp(110px,15svh,160px);padding-bottom:clamp(64px,10svh,120px)}
+.lg-back{display:inline-flex;align-items:center;gap:10px;font-size:14px;color:var(--muted);text-decoration:none;margin-bottom:clamp(28px,5svh,48px)}
+.lg-back::before{content:"";width:18px;height:1px;background:currentColor;transition:width .5s var(--smooth)}
+.lg-back:hover{color:var(--ink)}.lg-back:hover::before{width:28px}
+.lg-eb{margin:0 0 14px;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:10px}
+.lg-eb::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ink)}
+.lg h1{margin:0;font-weight:400;max-width:1100px}
+.lg h1 b{display:block;font:800 clamp(46px,7vw,128px)/.95 var(--f-caps);text-transform:uppercase;letter-spacing:-.015em}
+.lg h1 i{display:block;font:400 italic clamp(34px,4.4vw,80px)/1.05 var(--f-serif);letter-spacing:-.03em;margin-top:.1em}
+.lg-meta{margin:22px 0 0;font-size:14px;color:var(--muted)}
+.lg-body{display:grid;grid-template-columns:minmax(0,300px) minmax(0,720px);gap:clamp(32px,7vw,140px);margin-top:clamp(48px,9svh,104px);padding-top:28px;border-top:1px solid var(--line)}
+.lg-toc{position:sticky;top:100px;align-self:start;display:grid}
+.lg-toc a{display:flex;gap:14px;padding:11px 0;border-bottom:1px solid var(--line);font-size:15px;color:var(--muted);text-decoration:none;transition:color .3s}
+.lg-toc a span{font-variant-numeric:tabular-nums;color:var(--soft);font-size:13px;padding-top:2px}
+.lg-toc a:hover{color:var(--ink)}
+.lg-lead{margin:0 0 40px;font-size:clamp(19px,1.5vw,23px);line-height:1.5;color:var(--ink);text-wrap:pretty}
+.lg-text section{padding-top:8px;margin-bottom:44px;scroll-margin-top:100px}
+.lg-text h2{display:flex;align-items:baseline;gap:16px;margin:0 0 18px;font:800 clamp(22px,1.8vw,30px)/1.1 var(--f-caps);text-transform:uppercase;letter-spacing:-.01em}
+.lg-text h2 span{font:400 italic .8em/1 var(--f-serif);color:var(--soft);text-transform:none}
+.lg-text p,.lg-text li{font-size:16px;line-height:1.65;color:#3c3c39;text-wrap:pretty}
+.lg-text p{margin:0 0 12px}
+.lg-text ul{margin:0 0 14px;padding-left:20px}
+.lg-text li{margin-bottom:6px}
+.lg-text a{color:var(--ink);text-underline-offset:3px}
+/* места, которые нужно заполнить перед запуском */
+.todo{background:#FFE9A8;color:#111;padding:0 .25em;border-radius:3px}
+@media (max-width:899px){.lg-body{grid-template-columns:1fr}.lg-toc{position:static}}

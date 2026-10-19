@@ -1,12 +1,19 @@
 ---
 // Блок 4 «Связь»: тёмный финал страницы. Белый блок «Обо мне» снизу заканчивается дугой,
-// которая при прокрутке выпрямляется и открывает тёмный слой (по мотивам dennissnellenberg.com).
-// Форма — одна фраза с полями внутри; круглая белая кнопка «Отправить» тянется за курсором.
-// Тексты временные, финальные пишем на этапе текстов.
+// которая при прокрутке выпрямляется и открывает тёмный слой.
+// Форма — одна фраза с полями внутри; поля по очереди сами «заполняются» примерами, пока человек не начал печатать.
+// Кнопка «Отправить» — в четырёх уголках, как на загрузочном экране: когда всё заполнено, уголки защёлкиваются.
+// После отправки — поп-ап «Спасибо». Тексты временные, финальные пишем на этапе текстов.
 import '../styles/contact.css';
 import { TG_LINK, TG_ME, EMAIL } from '../data/ring';
 
 const kinds = ['лендинг', 'многостраничный', 'B2B', 'пока не знаю'];
+const ico = {
+  tg: '<path d="M21 4 3 11l6 2.2M21 4l-3.2 16-8.8-7M21 4 9 13.2V19l3.2-3.3"/>',
+  bot: '<rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/>',
+  mail: '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="m4 7 8 6 8-6"/>',
+};
+const svg = (d: string) => `<svg class="ct-ico" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
 ---
 <section class="ct" id="contact" aria-labelledby="ctTitle">
   <div class="ct-arc" id="ctArc" aria-hidden="true"></div>
@@ -19,54 +26,72 @@ const kinds = ['лендинг', 'многостраничный', 'B2B', 'по�
     </h2>
 
     <form class="ct-form" id="ctForm" novalidate>
-      <div class="ct-fields" id="ctFields">
-        <p class="ct-phrase ct-up">
-          <span class="ct-w">Привет! Меня зовут</span>
-          <label class="ct-f" data-v="ваше имя" data-key="name">
-            <span class="sr">Имя</span>
-            <input size="1" name="name" autocomplete="name" placeholder="ваше имя" enterkeyhint="next" maxlength="60" required />
-          </label><span class="ct-w">, нужен сайт:</span>
-          <span class="ct-kinds" role="radiogroup" aria-label="Какой сайт нужен">
-            {kinds.map((k) => (
-              <label class="ct-kind ct-up"><input type="radio" name="kind" value={k} /><span>{k}</span></label>
-            ))}
-          </span>
-          <span class="ct-w">— для</span>
-          <label class="ct-f ct-f--task" data-v="завода с картой дилеров" data-key="task">
-            <span class="sr">Коротко о задаче</span>
-            <input size="1" name="task" autocomplete="off" placeholder="" enterkeyhint="next" maxlength="300" />
-          </label><span class="ct-w">. Связаться со&nbsp;мной:</span>
-          <label class="ct-f ct-f--contact" data-v="@ник, телефон или почта" data-key="contact">
-            <span class="sr">Telegram, телефон или почта</span>
-            <input size="1" name="contact" autocomplete="on" inputmode="text" placeholder="@ник, телефон или почта" enterkeyhint="send" maxlength="120" required />
-            <em class="ct-type" id="ctType" aria-live="polite"></em>
-          </label>
-        </p>
-        <!-- ловушка для спам-ботов: человек это поле не видит и не заполняет -->
-        <input class="ct-hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" />
+      <p class="ct-phrase ct-up">
+        <span class="ct-w">Привет! Меня зовут</span>
+        <label class="ct-f" data-v="ваше имя" data-key="name">
+          <span class="sr">Имя</span>
+          <input size="1" name="name" autocomplete="name" placeholder="ваше имя" enterkeyhint="next" maxlength="60" required />
+        </label><span class="ct-w">, нужен сайт:</span>
+        <span class="ct-kinds" role="radiogroup" aria-label="Какой сайт нужен">
+          {kinds.map((k) => (
+            <label class="ct-kind ct-up"><input type="radio" name="kind" value={k} /><span>{k}</span></label>
+          ))}
+        </span>
+        <span class="ct-w">— для</span>
+        <label class="ct-f ct-f--task" data-v="кофейни с доставкой" data-key="task">
+          <span class="sr">Коротко о задаче</span>
+          <input size="1" name="task" autocomplete="off" placeholder="кофейни с доставкой" enterkeyhint="next" maxlength="300" />
+        </label><span class="ct-w">. Связаться со&nbsp;мной:</span>
+        <label class="ct-f ct-f--contact" data-v="@ник, телефон или почта" data-key="contact">
+          <span class="sr">Telegram, телефон или почта</span>
+          <input size="1" name="contact" autocomplete="on" inputmode="text" placeholder="@ник, телефон или почта" enterkeyhint="send" maxlength="120" required />
+          <em class="ct-type" id="ctType" aria-live="polite"></em>
+        </label>
+      </p>
+      <!-- ловушка для спам-ботов: человек это поле не видит и не заполняет -->
+      <input class="ct-hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" />
 
-        <div class="ct-row">
-          <i class="ct-rule" aria-hidden="true"></i>
-          <p class="ct-msg" id="ctMsg" aria-live="polite"></p>
-          <div class="ct-mag" id="ctMag">
-            <button class="btn btn--round" type="submit" id="ctSend"><span class="ct-sl">Отправить</span></button>
-          </div>
+      <div class="ct-row">
+        <div class="ct-sendbox ct-up" id="ctSendBox">
+          <i class="cx cx--tl"></i><i class="cx cx--tr"></i><i class="cx cx--bl"></i><i class="cx cx--br"></i>
+          <button class="btn ct-send" type="submit" id="ctSend"><span class="ct-sl"><b>Отправить</b> <i>заявку</i></span></button>
         </div>
-      </div>
-
-      <div class="ct-done" id="ctDone" aria-live="polite" hidden>
-        <p class="ct-done-t"><b>Получил,</b> <i>уже читаю</i></p>
-        <p class="ct-done-s">Заявка у&nbsp;меня в&nbsp;Telegram. Отвечу в&nbsp;течение 24&nbsp;часов&nbsp;— обычно быстрее.</p>
-        <button class="ct-again" type="button" id="ctAgain">Отправить ещё одну</button>
+        <div class="ct-side">
+          <label class="ct-agree ct-up">
+            <input type="checkbox" name="agree" id="ctAgree" required />
+            <span class="box" aria-hidden="true"></span>
+            <span class="txt">Согласен на&nbsp;обработку персональных данных по&nbsp;<a href="/privacy/" target="_blank">Политике</a>. Заявка придёт мне через Telegram&nbsp;— его серверы находятся за&nbsp;пределами Беларуси.</span>
+          </label>
+          <p class="ct-msg" id="ctMsg" aria-live="polite"></p>
+        </div>
       </div>
     </form>
 
     <div class="ct-quick">
       <span class="ct-or ct-up">или быстрее:</span>
-      <a class="btn btn--dark ct-up" href={TG_ME} data-tg-me>Написать в Telegram</a>
-      <a class="btn btn--dark ct-up" href={TG_LINK} data-tg>Спросить бота</a>
-      <button class="btn btn--dark ct-up" type="button" id="ctMail" data-mail={EMAIL}>Скопировать почту</button>
+      <a class="btn btn--light ct-q ct-up" href={TG_ME} data-tg-me><Fragment set:html={svg(ico.tg)} />Написать в Telegram</a>
+      <a class="btn btn--dark ct-q ct-up" href={TG_LINK} data-tg><Fragment set:html={svg(ico.bot)} />Спросить бота</a>
+      <button class="btn btn--dark ct-q ct-up" type="button" data-mail={EMAIL}><Fragment set:html={svg(ico.mail)} />Скопировать почту</button>
       <p class="ct-time ct-up" id="ctTime">Минск</p>
+    </div>
+  </div>
+
+  <!-- поп-ап после отправки: окно открывается из четырёх уголков, как загрузочный экран -->
+  <div class="ct-pop" id="ctPop" role="dialog" aria-modal="true" aria-labelledby="ctPopT" hidden>
+    <div class="ct-pop-bg" data-close></div>
+    <div class="ct-pop-box">
+      <i class="cx cx--tl"></i><i class="cx cx--tr"></i><i class="cx cx--bl"></i><i class="cx cx--br"></i>
+      <div class="ct-pop-card">
+        <button class="ct-pop-x" type="button" data-close aria-label="Закрыть"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        <p class="ct-pop-eb">Заявка отправлена</p>
+        <h3 id="ctPopT"><span class="ct-ln"><span><b>Спасибо,</b></span></span><span class="ct-ln"><span><i id="ctPopName">что написали</i></span></span></h3>
+        <p class="ct-pop-s">Заявка уже у&nbsp;меня в&nbsp;Telegram. Отвечу как можно быстрее&nbsp;— <span id="ctPopWhen">обычно в&nbsp;течение пары часов</span>.</p>
+        <p class="ct-pop-s">Хотите ответ прямо сейчас? Бот знает цены, сроки и&nbsp;как я&nbsp;работаю.</p>
+        <div class="ct-pop-b">
+          <a class="btn" href={TG_LINK} data-tg><Fragment set:html={svg(ico.bot)} />Спросить бота</a>
+          <button class="ct-pop-close" type="button" data-close>Закрыть</button>
+        </div>
+      </div>
     </div>
   </div>
 </section>

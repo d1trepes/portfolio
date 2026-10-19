@@ -1,7 +1,8 @@
 // @ts-nocheck
 // Блок 4 «Связь» + тёмный футер.
-// Дуга-переход, «подложка» с лёгким параллаксом, мини-анимации по скроллу, магнитная круглая кнопка,
-// форма-фраза (подсказка печатается сама, поле контакта само узнаёт Telegram/телефон/почту) и отправка.
+// Дуга-переход, «подложка» с лёгким параллаксом, мини-анимации по скроллу,
+// форма-фраза (поля по очереди сами заполняются примерами, поле контакта само узнаёт Telegram/телефон/почту),
+// кнопка в уголках, согласие, отправка и поп-ап «Спасибо».
 // Кадр вызывается из общего цикла (hero.ts) — отдельного requestAnimationFrame нет; вне экрана ничего не считает.
 import { LEAD_ENDPOINT } from '../data/ring';
 
@@ -9,8 +10,8 @@ export function initContact(F) {
   const $ = (s, r = document) => r.querySelector(s);
   const sec = $('#contact');
   if (!sec) return { frame() {}, measure() {}, top: () => 0 };
-  const arc = $('#ctArc'), inner = $('#ctIn'), form = $('#ctForm'), mag = $('#ctMag'), send = $('#ctSend'), label = $('.ct-sl', send);
-  const msg = $('#ctMsg'), typeEl = $('#ctType'), done = $('#ctDone'), toast = $('#toast'), root = document.documentElement;
+  const arc = $('#ctArc'), inner = $('#ctIn'), form = $('#ctForm');
+  const msg = $('#ctMsg'), typeEl = $('#ctType'), toast = $('#toast'), root = document.documentElement;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v)), lerp = (a, b, t) => a + (b - a) * t;
@@ -20,16 +21,14 @@ export function initContact(F) {
   // ---------- мини-анимации: у каждого элемента своё окно по положению на экране ----------
   const A = [];
   const add = (el, prop, delay = 0, len = 0.22) => el && A.push({ el, prop, delay, len, y: 0, v: '' });
-  sec.querySelectorAll('.ct-eyebrow, .ct-ln > span, .ct-phrase, .ct-kind, .ct-quick .ct-up').forEach((el) => add(el, '--p'));
+  sec.querySelectorAll('.ct-eyebrow, .ct-in h2 .ct-ln > span, .ct-phrase, .ct-kind, .ct-row .ct-up, .ct-quick .ct-up').forEach((el) => add(el, '--p'));
   sec.querySelectorAll('.ct-f').forEach((el, i) => add(el, '--ln', 0.06 + i * 0.05, 0.3));
-  add($('.ct-rule', sec), '--ln', 0, 0.4);
-  add(mag, '--p', 0.12, 0.25);
   // футер
   const foot = $('#ft');
   if (foot) foot.querySelectorAll('.ft-up').forEach((el) => add(el, '--p'));
   // строки одного ряда — лесенкой
   const stagger = new Map();
-  A.forEach((o) => { if (o.prop !== '--p') return; const key = o.el.closest('.ct-kinds, .ct-quick, .ft-cols, h2') || o.el; const n = stagger.get(key) || 0; stagger.set(key, n + 1); o.delay += n * 0.035; });
+  A.forEach((o) => { if (o.prop !== '--p') return; const key = o.el.closest('.ct-kinds, .ct-row, .ct-quick, .ft-cols, h2') || o.el; const n = stagger.get(key) || 0; stagger.set(key, n + 1); o.delay += n * 0.035; });
 
   const G = { top: 0, h: 1, vh: 1, ftTop: 0, ftH: 1 };
   function measure() {
@@ -46,25 +45,61 @@ export function initContact(F) {
 
   // ---------- форма: поля подстраивают ширину под текст ----------
   const fields = [...form.querySelectorAll('.ct-f')];
+  const byKey = Object.fromEntries(fields.map((f) => [f.dataset.key, f]));
   const inputs = Object.fromEntries(fields.map((f) => [f.dataset.key, $('input', f)]));
-  fields.forEach((f) => {
-    const inp = $('input', f), ph = f.dataset.v;
-    inp.addEventListener('input', () => { f.dataset.v = inp.value || ph; f.classList.remove('bad'); if (msg.textContent) check(false); });
-  });
+  const HINT = { name: 'ваше имя', task: 'кофейни с доставкой', contact: '@ник, телефон или почта' };
+  const agree = $('#ctAgree'), agreeL = agree.closest('.ct-agree'), box = $('#ctSendBox');
+  const kindsEls = [...form.querySelectorAll('.ct-kind')];
 
-  // подсказка в поле задачи печатается сама и меняется — сразу видно, что сюда писать
-  const examples = ['завода с картой дилеров', 'кофейни с доставкой', 'онлайн-школы английского', 'стоматологии в Минске', 'студии ремонта квартир'];
-  const task = inputs.task, taskF = task.closest('.ct-f');
-  let ty = { i: 0, n: 0, dir: 1, t: 0, hold: 0 };
-  function typeTick(now) {
-    if (task.value || reduce) { if (reduce && !task.value && task.placeholder !== examples[0]) task.placeholder = examples[0]; return; }
-    if (now < ty.t) return;
-    const word = examples[ty.i];
-    if (ty.n === 0 && ty.dir > 0 && taskF.dataset.v !== word) taskF.dataset.v = word; // ширина поля — под текущий пример
-    if (ty.dir > 0) { ty.n++; ty.t = now + 55 + Math.random() * 40; if (ty.n >= word.length) { ty.dir = -1; ty.t = now + 1700; } }
-    else { ty.n--; ty.t = now + 24; if (ty.n <= 0) { ty.dir = 1; ty.i = (ty.i + 1) % examples.length; ty.t = now + 350; } }
-    task.placeholder = word.slice(0, ty.n);
+  // ---------- поля сами «заполняются» примерами — по очереди: имя → вид сайта → задача → контакт ----------
+  // Как будто кто-то заполняет форму у вас на глазах. Как только человек трогает форму — показ останавливается,
+  // а в пустых полях остаются спокойные подсказки.
+  const SETS = [
+    { name: 'Алексей', kind: 1, task: 'завода с картой дилеров', contact: '@alexey_m' },
+    { name: 'Марина', kind: 0, task: 'кофейни с доставкой', contact: '+375 29 123-45-67' },
+    { name: 'Дмитрий', kind: 2, task: 'оптовой компании', contact: 'd.ivanov@mail.ru' },
+    { name: 'Ольга', kind: 0, task: 'стоматологии в Минске', contact: '@olga_dent' },
+  ];
+  const ORDER = ['name', 'kind', 'task', 'contact'];
+  const D = { on: !reduce, set: 0, step: -1, n: 0, t: 0, phase: 'wait' };
+  function setPh(k, text) { const inp = inputs[k]; if (inp.placeholder !== text) inp.placeholder = text; }
+  function demoKind(i) { kindsEls.forEach((el, j) => el.classList.toggle('demo', j === i)); }
+  function stopDemo() {
+    if (!D.on) return; D.on = false;
+    fields.forEach((f) => { f.classList.remove('demo'); const k = f.dataset.key; setPh(k, HINT[k]); if (!inputs[k].value) f.dataset.v = HINT[k]; });
+    demoKind(-1);
   }
+  function demoTick(now) {
+    if (!D.on || now < D.t) return;
+    const S = SETS[D.set];
+    if (D.phase === 'wait') { // начало круга: поля пустые, ширина — под примеры этого круга
+      ['name', 'task', 'contact'].forEach((k) => { setPh(k, ''); byKey[k].dataset.v = S[k]; });
+      demoKind(-1); D.step = 0; D.n = 0; D.phase = 'type'; D.t = now + 500; return;
+    }
+    if (D.phase === 'type') {
+      const k = ORDER[D.step];
+      if (k === 'kind') { demoKind(S.kind); D.step++; D.t = now + 650; return; }
+      const word = S[k]; byKey[k].classList.add('demo');
+      D.n++; setPh(k, word.slice(0, D.n));
+      if (D.n >= word.length) {
+        byKey[k].classList.remove('demo'); D.n = 0; D.step++;
+        if (D.step >= ORDER.length) { D.phase = 'hold'; D.t = now + 2400; } else D.t = now + 380;
+      } else D.t = now + 55 + Math.random() * 45;
+      return;
+    }
+    if (D.phase === 'hold') { // всё «заполнено» — стираем сразу всё, быстро, и следующий пример
+      ['name', 'task', 'contact'].forEach((k) => setPh(k, ''));
+      demoKind(-1); D.set = (D.set + 1) % SETS.length; D.phase = 'wait'; D.t = now + 350;
+    }
+  }
+  if (reduce) ['name', 'task', 'contact'].forEach((k) => setPh(k, HINT[k]));
+  form.addEventListener('focusin', stopDemo);
+  form.addEventListener('pointerdown', stopDemo);
+
+  fields.forEach((f) => {
+    const inp = $('input', f), k = f.dataset.key;
+    inp.addEventListener('input', () => { f.dataset.v = inp.value || HINT[k]; f.classList.remove('bad'); if (msg.textContent) check(false); ready(); });
+  });
 
   // поле контакта само понимает, что ввели
   const kindOf = (v) => {
@@ -83,7 +118,7 @@ export function initContact(F) {
     typeEl.classList.toggle('on', !!k);
   });
 
-  // Enter — к следующему полю, в последнем — отправка
+  // Enter — к следующему полю
   const order = ['name', 'task', 'contact'];
   order.forEach((k, i) => inputs[k].addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return;
@@ -91,43 +126,82 @@ export function initContact(F) {
   }));
   form.querySelectorAll('.ct-kind input').forEach((r) => r.addEventListener('change', () => { if (!inputs.task.value) inputs.task.focus({ preventScroll: true }); }));
 
+  // уголки вокруг кнопки защёлкиваются, когда всё нужное заполнено
+  const isReady = () => inputs.name.value.trim().length >= 2 && !!kindOf(inputs.contact.value) && agree.checked;
+  function ready() { box.classList.toggle('ready', isReady()); }
+  agree.addEventListener('change', () => { agreeL.classList.remove('bad'); if (msg.textContent) check(false); ready(); });
+
   function check(focus = true) {
     const bad = [];
     if (inputs.name.value.trim().length < 2) bad.push('name');
     if (!kindOf(inputs.contact.value)) bad.push('contact');
+    if (!agree.checked) bad.push('agree');
     fields.forEach((f) => f.classList.toggle('bad', bad.includes(f.dataset.key) && focus));
-    msg.textContent = !bad.length ? '' : bad.length === 2 ? 'Оставьте имя и контакт — без них я не смогу ответить' : bad[0] === 'name' ? 'Как к вам обращаться?' : 'Проверьте контакт: @ник в Telegram, телефон или почта';
-    if (focus && bad.length) { const f = fields.find((x) => x.dataset.key === bad[0]); f.classList.remove('bad'); void f.offsetWidth; f.classList.add('bad'); inputs[bad[0]].focus({ preventScroll: true }); }
+    agreeL.classList.toggle('bad', bad.includes('agree') && focus);
+    const f = bad.filter((b) => b !== 'agree');
+    msg.textContent = !bad.length ? '' : f.length === 2 ? 'Оставьте имя и контакт — без них я не смогу ответить'
+      : f[0] === 'name' ? 'Как к вам обращаться?' : f[0] === 'contact' ? 'Проверьте контакт: @ник в Telegram, телефон или почта'
+      : 'Поставьте галочку согласия — без неё заявку отправить нельзя';
+    if (focus && bad.length) {
+      const k = bad[0], el = k === 'agree' ? agreeL : byKey[k];
+      el.classList.remove('bad'); void el.offsetWidth; el.classList.add('bad');
+      (k === 'agree' ? agree : inputs[k]).focus({ preventScroll: true });
+    }
     return !bad.length;
   }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    stopDemo();
     if (!check()) return;
     const data = Object.fromEntries(new FormData(form).entries());
     if (data.company) return; // бот
     data.contactType = kindOf(data.contact);
     data.page = location.pathname; data.ref = new URLSearchParams(location.search).get('utm_source') || '';
-    send.classList.add('busy'); label.textContent = 'Отправляю…';
+    box.classList.add('busy');
     try {
       if (LEAD_ENDPOINT) {
         const r = await fetch(LEAD_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (!r.ok) throw new Error(r.status);
       } else await new Promise((r) => setTimeout(r, 900)); // демо-режим, пока нет сервера
-      done.hidden = false; void done.offsetWidth;
-      form.classList.add('sent');
+      openPop(data.name);
+      form.reset(); typeEl.classList.remove('on');
+      fields.forEach((f) => { f.dataset.v = HINT[f.dataset.key]; });
+      ready();
     } catch (err) {
       msg.textContent = 'Не отправилось — напишите мне в Telegram, кнопка ниже';
-    } finally { send.classList.remove('busy'); label.textContent = 'Отправить'; }
+    } finally { box.classList.remove('busy'); }
   });
-  $('#ctAgain').addEventListener('click', () => {
-    form.classList.remove('sent'); form.reset();
-    fields.forEach((f) => { f.dataset.v = $('input', f).placeholder || f.dataset.v; });
-    fields.find((f) => f.dataset.key === 'name').dataset.v = 'ваше имя';
-    fields.find((f) => f.dataset.key === 'contact').dataset.v = '@ник, телефон или почта';
-    fields.find((f) => f.dataset.key === 'task').dataset.v = examples[ty.i];
-    typeEl.classList.remove('on');
-    setTimeout(() => { done.hidden = true; inputs.name.focus({ preventScroll: true }); }, 700);
+
+  // ---------- поп-ап «Спасибо» ----------
+  const pop = $('#ctPop');
+  document.body.appendChild(pop); // поверх шапки и всего сайта
+  const popWhen = $('#ctPopWhen'), popName = $('#ctPopName');
+  let lastFocus = null;
+  function openPop(name) {
+    const first = (name || '').trim().split(/\s+/)[0];
+    popName.textContent = first ? `${first.slice(0, 18)}!` : 'что написали';
+    popWhen.textContent = whenNote();
+    lastFocus = document.activeElement;
+    pop.hidden = false; void pop.offsetWidth; pop.classList.add('on');
+    F.lenis && F.lenis.stop();
+    setTimeout(() => $('.ct-pop-x', pop).focus({ preventScroll: true }), 300);
+  }
+  function closePop() {
+    if (pop.hidden) return;
+    pop.classList.remove('on');
+    F.lenis && F.lenis.start();
+    setTimeout(() => { pop.hidden = true; }, 600);
+    lastFocus && lastFocus.focus && lastFocus.focus({ preventScroll: true });
+  }
+  pop.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', closePop));
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') closePop(); });
+  // фокус не уходит из окна, пока оно открыто
+  pop.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
+    const f = [...pop.querySelectorAll('a,button')]; const a = f[0], z = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); }
+    else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
   });
 
   // быстрые пути
@@ -145,6 +219,10 @@ export function initContact(F) {
   const timeEl = $('#ctTime');
   const fmt = new Intl.DateTimeFormat('ru-RU', { timeZone: 'Europe/Minsk', hour: '2-digit', minute: '2-digit' });
   const hourFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Minsk', hour: 'numeric', hour12: false });
+  function whenNote() {
+    const h = +hourFmt.format(new Date()) % 24;
+    return h >= 9 && h < 19 ? 'обычно в течение пары часов' : h >= 19 && h < 23 ? 'сегодня вечером или завтра утром' : 'утром, как проснусь';
+  }
   function tick() {
     const d = new Date(), h = +hourFmt.format(d) % 24;
     const note = h >= 9 && h < 19 ? 'на связи, отвечу в течение пары часов' : h >= 19 && h < 23 ? 'отвечу сегодня или завтра утром' : 'отвечу утром';
@@ -177,11 +255,6 @@ export function initContact(F) {
     win.addEventListener('pointerleave', () => { WL.tr = 0; });
   }
 
-  // ---------- магнитная кнопка ----------
-  const M = { x: 0, y: 0, tx: 0, ty: 0, k: '' };
-  let px = -1e4, py = -1e4;
-  if (fine && !reduce) addEventListener('pointermove', (e) => { px = e.clientX; py = e.clientY; }, { passive: true });
-
   // ---------- кадр ----------
   let lastArc = '', lastPar = '', dark = null;
   function frame(now) {
@@ -210,17 +283,7 @@ export function initContact(F) {
       if (v !== o.v) { o.v = v; o.el.style.setProperty(o.prop, v); }
     }
 
-    typeTick(now);
-
-    // магнит: кнопка тянется к курсору, когда он рядом
-    if (fine && !reduce) {
-      const r = mag.getBoundingClientRect(), cx = r.left + r.width / 2 - M.x, cy = r.top + r.height / 2 - M.y;
-      const dx = px - cx, dy = py - cy, R = r.width * 0.5, inside = Math.hypot(dx, dy) < R * 1.7;
-      M.tx = inside ? dx * 0.32 : 0; M.ty = inside ? dy * 0.32 : 0;
-      M.x = lerp(M.x, M.tx, 0.14); M.y = lerp(M.y, M.ty, 0.14);
-      const k = `${M.x.toFixed(1)},${M.y.toFixed(1)}`;
-      if (k !== M.k) { M.k = k; mag.style.transform = `translate3d(${M.x.toFixed(1)}px,${M.y.toFixed(1)}px,0)`; label.style.transform = `translate3d(${(M.x * 0.35).toFixed(1)}px,${(M.y * 0.35).toFixed(1)}px,0)`; }
-    }
+    demoTick(now);
 
     // футер: окно с картинкой раскрывается по скроллу, кадр внутри чуть едет; линза
     if (win) {
